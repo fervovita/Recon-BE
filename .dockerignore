@@ -1,0 +1,13 @@
+.env
+certbot/
+mysql-data/
+redis-data/
+.git
+.gitignore
+.idea
+*.md
+src/
+gradle/
+gradlew
+gradlew.bat
+.gradle
