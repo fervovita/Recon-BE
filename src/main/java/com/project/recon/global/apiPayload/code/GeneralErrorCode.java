@@ -16,6 +16,10 @@ public enum GeneralErrorCode implements BaseErrorCode {
     FORBIDDEN(HttpStatus.FORBIDDEN, "AUTH_4031", "접근 권한이 없습니다."),
     TOKEN_EXPIRED(HttpStatus.valueOf(419), "AUTH_4191", "토큰이 만료되었습니다."),
 
+    // 카카오 에러
+    KAKAO_INVALID_CODE(HttpStatus.UNAUTHORIZED, "KAKAO_4011", "유효하지 않은 카카오 인가 코드입니다."),
+    KAKAO_USER_INFO_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "KAKAO_5001", "카카오 사용자 정보 조회에 실패했습니다."),
+
     // 회원 에러
     MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "MEM_4041", "존재하지 않는 회원입니다."),
     ALREADY_WITHDRAWN(HttpStatus.GONE, "MEM_4101", "이미 탈퇴한 회원입니다."),
