@@ -12,11 +12,11 @@ import java.time.LocalDateTime;
 
 @Getter
 @AllArgsConstructor
-@JsonPropertyOrder({"isSuccess", "code", "message", "result", "error", "timestamp"})
+@JsonPropertyOrder({"success", "code", "message", "result", "error", "timestamp"})
 public class ApiResponse<T> {
 
-    @JsonProperty("isSuccess")
-    private final boolean isSuccess;
+    @JsonProperty("success")
+    private final boolean success;
 
     @JsonProperty("code")
     private final String code;
