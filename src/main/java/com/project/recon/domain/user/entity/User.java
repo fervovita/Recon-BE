@@ -7,6 +7,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
 
@@ -42,6 +43,9 @@ public class User extends BaseEntity implements UserDetails {
     @Column(name = "nick_name", length = 20)
     private String nickName;
 
+    @Column(name = "birth_date")
+    private LocalDate birthDate;
+
     @Column(name = "phone_number", length = 20)
     private String phoneNumber;
 
@@ -50,6 +54,18 @@ public class User extends BaseEntity implements UserDetails {
                 .provider(ProviderType.KAKAO)
                 .providerId(kakaoId)
                 .nickName(nickName)
+                .role(UserRole.USER)
+                .build();
+    }
+
+    public static User createEmailUser(String nickName, String email, String password, String phoneNumber, LocalDate birthDate) {
+        return User.builder()
+                .nickName(nickName)
+                .email(email)
+                .password(password)
+                .phoneNumber(phoneNumber)
+                .birthDate(birthDate)
+                .provider(ProviderType.LOCAL)
                 .role(UserRole.USER)
                 .build();
     }

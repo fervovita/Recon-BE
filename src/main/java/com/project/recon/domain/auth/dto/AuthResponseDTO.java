@@ -24,4 +24,13 @@ public class AuthResponseDTO {
         private String accessToken;
         private String refreshToken;
     }
+
+    @Getter
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @Builder
+    public static class SignupResponseDTO {
+        private String accessToken;
+        private String refreshToken;
+    }
 }
