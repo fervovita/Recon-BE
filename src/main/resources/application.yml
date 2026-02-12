@@ -2,6 +2,9 @@ spring:
   application:
     name: recon
 
+  config:
+    import: optional:file:.env[.properties]
+
   datasource:
     url: ${SPRING_DATASOURCE_URL}
     username: ${SPRING_DATASOURCE_USERNAME}
@@ -14,15 +17,25 @@ spring:
     show-sql: true
     properties:
       hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
         format_sql: true
+        default_batch_fetch_size: 100
 
   data:
     redis:
       host: ${SPRING_DATA_REDIS_HOST}
       port: ${SPRING_DATA_REDIS_PORT}
 
-  session:
-    store-type: redis
 
 server:
   forward-headers-strategy: framework
+
+jwt:
+  secret: ${JWT_SECRET_KEY}
+  access-token-expiration: ${JWT_ACCESSTOKEN_EXPIRATION}
+  refresh-token-expiration: ${JWT_REFRESHTOKEN_EXPIRATION}
+
+kakao:
+  client-id: ${KAKAO_CLIENT_ID}
+  client-secret: ${KAKAO_CLIENT_SECRET}
+  redirect-uri: ${KAKAO_REDIRECT_URI}
