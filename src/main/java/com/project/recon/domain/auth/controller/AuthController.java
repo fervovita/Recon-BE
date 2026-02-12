@@ -48,4 +48,11 @@ public class AuthController {
         authService.logout(request);
         return ApiResponse.onSuccess("로그아웃 성공");
     }
+
+    @Operation(summary = "회원가입")
+    @PostMapping("/signup")
+    public ApiResponse<AuthResponseDTO.SignupResponseDTO> signup(@Valid @RequestBody AuthRequestDTO.SignupRequestDTO request) {
+        AuthResponseDTO.SignupResponseDTO response = authService.signup(request);
+        return ApiResponse.onSuccess("회원가입 성공", response);
+    }
 }

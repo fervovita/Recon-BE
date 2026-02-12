@@ -16,6 +16,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.Period;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -167,5 +170,54 @@ public class AuthServiceImpl implements AuthService {
 
         // Redis에서 refreshToken 삭제
         refreshTokenService.deleteRefreshToken(userId);
+    }
+
+    @Override
+    @Transactional
+    public AuthResponseDTO.SignupResponseDTO signup(AuthRequestDTO.SignupRequestDTO request) {
+
+        // 만 14세 미만 검증
+        if (Period.between(request.getBirthDate(), LocalDate.now()).getYears() < 14) {
+            throw new GeneralException(GeneralErrorCode.UNDER_AGE);
+        }
+
+        // 중복 닉네임 검증
+        if (userRepository.existsByNickName(request.getNickName())) {
+            throw new GeneralException(GeneralErrorCode.DUPLICATE_NICKNAME);
+        }
+
+        // 중복 이메일 검증
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new GeneralException(GeneralErrorCode.DUPLICATE_EMAIL);
+        }
+
+        // 중복 전화번호 검증
+        if (userRepository.existsByPhoneNumber(request.getPhoneNumber())) {
+            throw new GeneralException(GeneralErrorCode.DUPLICATE_PHONE);
+        }
+
+
+        User user = User.createEmailUser(
+                request.getNickName(),
+                request.getEmail(),
+                passwordEncoder.encode(request.getPassword()),
+                request.getPhoneNumber(),
+                request.getBirthDate()
+        );
+
+        // user 저장
+        userRepository.save(user);
+
+        // accessToken & refreshToken 생성
+        String accessToken = jwtTokenProvider.generateAccessToken(user);
+        String refreshToken = jwtTokenProvider.generateRefreshToken(user);
+
+        // refreshToken을 Redis에 저장
+        refreshTokenService.saveRefreshToken(user.getId(), refreshToken);
+
+        return AuthResponseDTO.SignupResponseDTO.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .build();
     }
 }
