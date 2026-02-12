@@ -107,4 +107,41 @@ public class AuthServiceImpl implements AuthService {
                 .refreshToken(refreshToken)
                 .build();
     }
+
+    @Override
+    @Transactional
+    public AuthResponseDTO.ReissueTokenResponseDTO reissueToken(AuthRequestDTO.ReissueTokenRequestDTO request) {
+
+        String refreshToken = request.getRefreshToken();
+
+        // refreshToken 유효성 검증
+        if (!jwtTokenProvider.isRefreshToken(refreshToken) || !jwtTokenProvider.validateToken(refreshToken)) {
+            throw new GeneralException(GeneralErrorCode.INVALID_TOKEN);
+        }
+
+        // 토근에서 userId 추출
+        Long userId = jwtTokenProvider.getUserIdFromToken(refreshToken);
+
+        // Redis에 저장된 refreshToken과 비교
+        String savedRefreshToken = refreshTokenService.getRefreshToken(userId);
+        if (savedRefreshToken == null || !savedRefreshToken.equals(refreshToken)) {
+            throw new GeneralException(GeneralErrorCode.INVALID_TOKEN);
+        }
+
+        // 유저 조회
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new GeneralException(GeneralErrorCode.MEMBER_NOT_FOUND));
+
+        // 새로운 accessToken & refreshToken 발급
+        String newAccessToken = jwtTokenProvider.generateAccessToken(user);
+        String newRefreshToken = jwtTokenProvider.generateRefreshToken(user);
+
+        // Redis에 새 refreshToken 저장
+        refreshTokenService.saveRefreshToken(userId, newRefreshToken);
+
+        return AuthResponseDTO.ReissueTokenResponseDTO.builder()
+                .accessToken(newAccessToken)
+                .refreshToken(newRefreshToken)
+                .build();
+    }
 }

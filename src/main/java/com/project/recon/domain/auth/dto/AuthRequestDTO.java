@@ -19,4 +19,10 @@ public class AuthRequestDTO {
         @NotBlank(message = "비밀번호가 없습니다.")
         private String password;
     }
+
+    @Getter
+    public static class ReissueTokenRequestDTO {
+        @NotBlank(message = "Refresh Token이 없습니다.")
+        private String refreshToken;
+    }
 }

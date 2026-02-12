@@ -34,4 +34,11 @@ public class AuthController {
         AuthResponseDTO.LoginResponseDTO response = authService.emailLogin(request);
         return ApiResponse.onSuccess("로그인 성공", response);
     }
+
+    @Operation(summary = "토큰 재발급")
+    @PostMapping("/refresh")
+    public ApiResponse<AuthResponseDTO.ReissueTokenResponseDTO> reissueToken(@Valid @RequestBody AuthRequestDTO.ReissueTokenRequestDTO request) {
+        AuthResponseDTO.ReissueTokenResponseDTO response = authService.reissueToken(request);
+        return ApiResponse.onSuccess("토큰 재발급 성공", response);
+    }
 }
