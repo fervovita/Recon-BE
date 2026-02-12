@@ -21,6 +21,7 @@ import java.time.Period;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 @Slf4j
 public class AuthServiceImpl implements AuthService {
 
@@ -81,7 +82,6 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    @Transactional
     public AuthResponseDTO.LoginResponseDTO emailLogin(AuthRequestDTO.EmailLoginRequestDTO request) {
 
         // email로 유저 조회
@@ -112,7 +112,6 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    @Transactional
     public AuthResponseDTO.ReissueTokenResponseDTO reissueToken(AuthRequestDTO.ReissueTokenRequestDTO request) {
 
         String refreshToken = request.getRefreshToken();
@@ -149,7 +148,6 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    @Transactional
     public void logout(AuthRequestDTO.LogoutRequestDTO request) {
 
         String refreshToken = request.getRefreshToken();
