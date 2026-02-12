@@ -49,7 +49,7 @@ public class SecurityConfig {
         CorsConfiguration config = new CorsConfiguration();
 
         config.setAllowCredentials(true);
-        config.addAllowedOriginPattern("https://localhost:3000");
+        config.addAllowedOriginPattern("http://localhost:3000");
         config.addAllowedOriginPattern("https://mustamall.store");
         config.addAllowedHeader("*");
         config.addAllowedMethod("*");
