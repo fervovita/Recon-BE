@@ -85,6 +85,11 @@ public class AuthServiceImpl implements AuthService {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new GeneralException(GeneralErrorCode.INVALID_LOGIN));
 
+        // 소셜 로그인 유저는 이메일 로그인 불가
+        if (user.getPassword() == null) {
+            throw new GeneralException(GeneralErrorCode.INVALID_LOGIN);
+        }
+
         // 비밀번호 검증
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new GeneralException(GeneralErrorCode.INVALID_LOGIN);
