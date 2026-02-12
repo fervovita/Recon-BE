@@ -61,6 +61,6 @@ public class User extends BaseEntity implements UserDetails {
 
     @Override
     public String getUsername() {
-        return getNickName();
+        return String.valueOf(id);
     }
 }
