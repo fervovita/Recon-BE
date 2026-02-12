@@ -34,4 +34,25 @@ public class AuthController {
         AuthResponseDTO.LoginResponseDTO response = authService.emailLogin(request);
         return ApiResponse.onSuccess("로그인 성공", response);
     }
+
+    @Operation(summary = "토큰 재발급")
+    @PostMapping("/refresh")
+    public ApiResponse<AuthResponseDTO.ReissueTokenResponseDTO> reissueToken(@Valid @RequestBody AuthRequestDTO.ReissueTokenRequestDTO request) {
+        AuthResponseDTO.ReissueTokenResponseDTO response = authService.reissueToken(request);
+        return ApiResponse.onSuccess("토큰 재발급 성공", response);
+    }
+
+    @Operation(summary = "로그아웃")
+    @PostMapping("/logout")
+    public ApiResponse<Void> logout(@Valid @RequestBody AuthRequestDTO.LogoutRequestDTO request) {
+        authService.logout(request);
+        return ApiResponse.onSuccess("로그아웃 성공");
+    }
+
+    @Operation(summary = "회원가입")
+    @PostMapping("/signup")
+    public ApiResponse<AuthResponseDTO.SignupResponseDTO> signup(@Valid @RequestBody AuthRequestDTO.SignupRequestDTO request) {
+        AuthResponseDTO.SignupResponseDTO response = authService.signup(request);
+        return ApiResponse.onSuccess("회원가입 성공", response);
+    }
 }

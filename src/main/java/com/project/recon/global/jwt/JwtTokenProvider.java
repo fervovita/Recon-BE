@@ -80,7 +80,21 @@ public class JwtTokenProvider {
                     .parseClaimsJws(token)
                     .getBody();
 
-            return TokenType.ACCESS.equals(claims.get("tokenType"));
+            return TokenType.ACCESS.name().equals(claims.get("tokenType"));
+        } catch (JwtException e) {
+            return false;
+        }
+    }
+
+    public boolean isRefreshToken(String token) {
+        try {
+            Claims claims = Jwts.parserBuilder()
+                    .setSigningKey(getSecretKey())
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+
+            return TokenType.REFRESH.name().equals(claims.get("tokenType"));
         } catch (JwtException e) {
             return false;
         }
