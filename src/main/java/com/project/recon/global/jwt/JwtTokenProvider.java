@@ -72,6 +72,20 @@ public class JwtTokenProvider {
         return false;
     }
 
+    public boolean isAccessToken(String token) {
+        try {
+            Claims claims = Jwts.parserBuilder()
+                    .setSigningKey(getSecretKey())
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+
+            return TokenType.ACCESS.equals(claims.get("tokenType"));
+        } catch (JwtException e) {
+            return false;
+        }
+    }
+
     public Long getUserIdFromToken(String token) {
         try {
             Claims claims = Jwts.parserBuilder()

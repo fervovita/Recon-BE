@@ -29,7 +29,10 @@ public class JwtTokenFilter extends OncePerRequestFilter {
 
         String accessToken = resolveToken(request);
 
-        if (accessToken != null && jwtTokenProvider.validateToken(accessToken)) {
+        if (accessToken != null
+                && jwtTokenProvider.validateToken(accessToken)
+                && jwtTokenProvider.isAccessToken(accessToken)
+        ) {
             Long userId = jwtTokenProvider.getUserIdFromToken(accessToken);
 
             if (userId != null) {
