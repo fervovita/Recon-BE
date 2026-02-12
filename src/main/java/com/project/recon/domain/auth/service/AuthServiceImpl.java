@@ -49,13 +49,16 @@ public class AuthServiceImpl implements AuthService {
             throw new GeneralException(GeneralErrorCode.KAKAO_USER_INFO_FAILED);
         }
 
+        if (kakaoUserInfo.getId() == null) {
+            throw new GeneralException(GeneralErrorCode.KAKAO_USER_INFO_FAILED);
+        }
+
         // 유저 조회 (없으면 새로 생성)
         User user = userRepository.findByProviderAndProviderId(ProviderType.KAKAO, kakaoUserInfo.getId())
                 .orElseGet(() -> {
                     User newUser = User.createKakaoUser(
                             kakaoUserInfo.getId(),
-                            kakaoUserInfo.getNickname(),
-                            kakaoUserInfo.getEmail()
+                            kakaoUserInfo.getNickname()
                     );
 
                     return userRepository.save(newUser);

@@ -14,10 +14,13 @@ public class KakaoUserInfoResponseDTO {
     @JsonProperty("kakao_account")
     private KakaoAccount kakaoAccount;
 
+    public String getNickname() {
+        return kakaoAccount.getProfile().getNickname();
+    }
+
     @Getter
     @NoArgsConstructor
     public static class KakaoAccount {
-        private String email;
         private Profile profile;
 
         @Getter
@@ -27,12 +30,4 @@ public class KakaoUserInfoResponseDTO {
         }
     }
 
-
-    public String getNickname() {
-        return kakaoAccount.getProfile().getNickname();
-    }
-
-    public String getEmail() {
-        return kakaoAccount.getEmail();
-    }
 }

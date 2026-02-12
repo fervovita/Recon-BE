@@ -45,12 +45,11 @@ public class User extends BaseEntity implements UserDetails {
     @Column(name = "phone_number", length = 20)
     private String phoneNumber;
 
-    public static User createKakaoUser(Long kakaoId, String nickName, String email) {
+    public static User createKakaoUser(Long kakaoId, String nickName) {
         return User.builder()
                 .provider(ProviderType.KAKAO)
                 .providerId(kakaoId)
                 .nickName(nickName)
-                .email(email)
                 .role(UserRole.USER)
                 .build();
     }
