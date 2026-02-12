@@ -10,4 +10,6 @@ public interface AuthService {
     AuthResponseDTO.LoginResponseDTO emailLogin(AuthRequestDTO.EmailLoginRequestDTO request);
 
     AuthResponseDTO.ReissueTokenResponseDTO reissueToken(AuthRequestDTO.ReissueTokenRequestDTO request);
+
+    void logout(AuthRequestDTO.LogoutRequestDTO request);
 }

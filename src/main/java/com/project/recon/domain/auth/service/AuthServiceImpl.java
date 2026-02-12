@@ -119,7 +119,7 @@ public class AuthServiceImpl implements AuthService {
             throw new GeneralException(GeneralErrorCode.INVALID_TOKEN);
         }
 
-        // 토근에서 userId 추출
+        // 토큰에서 userId 추출
         Long userId = jwtTokenProvider.getUserIdFromToken(refreshToken);
 
         // Redis에 저장된 refreshToken과 비교
@@ -143,5 +143,29 @@ public class AuthServiceImpl implements AuthService {
                 .accessToken(newAccessToken)
                 .refreshToken(newRefreshToken)
                 .build();
+    }
+
+    @Override
+    @Transactional
+    public void logout(AuthRequestDTO.LogoutRequestDTO request) {
+
+        String refreshToken = request.getRefreshToken();
+
+        // refreshToken 유효성 검증
+        if (!jwtTokenProvider.isRefreshToken(refreshToken) || !jwtTokenProvider.validateToken(refreshToken)) {
+            throw new GeneralException(GeneralErrorCode.INVALID_TOKEN);
+        }
+
+        // 토큰에서 userId 추출
+        Long userId = jwtTokenProvider.getUserIdFromToken(refreshToken);
+
+        // Redis에 저장된 refreshToken과 비교
+        String savedRefreshToken = refreshTokenService.getRefreshToken(userId);
+        if (savedRefreshToken == null || !savedRefreshToken.equals(refreshToken)) {
+            throw new GeneralException(GeneralErrorCode.INVALID_TOKEN);
+        }
+
+        // Redis에서 refreshToken 삭제
+        refreshTokenService.deleteRefreshToken(userId);
     }
 }

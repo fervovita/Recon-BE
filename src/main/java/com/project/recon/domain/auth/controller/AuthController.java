@@ -41,4 +41,11 @@ public class AuthController {
         AuthResponseDTO.ReissueTokenResponseDTO response = authService.reissueToken(request);
         return ApiResponse.onSuccess("토큰 재발급 성공", response);
     }
+
+    @Operation(summary = "로그아웃")
+    @PostMapping("/logout")
+    public ApiResponse<Void> logout(@Valid @RequestBody AuthRequestDTO.LogoutRequestDTO request) {
+        authService.logout(request);
+        return ApiResponse.onSuccess("로그아웃 성공");
+    }
 }

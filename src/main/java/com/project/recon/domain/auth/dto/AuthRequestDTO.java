@@ -25,4 +25,10 @@ public class AuthRequestDTO {
         @NotBlank(message = "Refresh Token이 없습니다.")
         private String refreshToken;
     }
+
+    @Getter
+    public static class LogoutRequestDTO {
+        @NotBlank(message = "Refresh Token이 없습니다.")
+        private String refreshToken;
+    }
 }
