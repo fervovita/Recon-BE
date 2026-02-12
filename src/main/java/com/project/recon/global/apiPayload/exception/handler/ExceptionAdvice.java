@@ -29,7 +29,7 @@ public class ExceptionAdvice {
     public ResponseEntity<ApiResponse<Object>> handleValidationException(MethodArgumentNotValidException e) {
         var errors = e.getBindingResult().getFieldErrors()
                 .stream()
-                .map(fld -> String.format("[%s] %s (입력값: %s)", fld.getField(), fld.getDefaultMessage(), fld.getRejectedValue()))
+                .map(fld -> String.format("[%s] %s", fld.getField(), fld.getDefaultMessage()))
                 .toList();
 
         log.warn("Validation Exception: {}", errors);
@@ -49,6 +49,6 @@ public class ExceptionAdvice {
 
         return ResponseEntity
                 .status(code.getHttpStatus())
-                .body(ApiResponse.onFailure(code, e.getMessage()));
+                .body(ApiResponse.onFailure(code, code.getMessage()));
     }
 }
