@@ -30,6 +30,9 @@ public enum GeneralErrorCode implements BaseErrorCode {
     MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "MEM_4041", "존재하지 않는 회원입니다."),
     ALREADY_WITHDRAWN(HttpStatus.GONE, "MEM_4101", "이미 탈퇴한 회원입니다."),
 
+    // 상품 에러
+    FILE_UPLOAD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "PRODUCT_5001", "파일 업로드에 실패했습니다."),
+
     // 주문 에러
     ORDER_NOT_FOUND(HttpStatus.NOT_FOUND, "ORD_4041", "존재하지 않는 주문입니다."),
     ORDER_CANNOT_CANCEL(HttpStatus.BAD_REQUEST, "ORD_4001", "배송이 시작되어 취소가 불가능합니다."),
