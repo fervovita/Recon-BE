@@ -1,6 +1,5 @@
 package com.project.recon.global.jwt;
 
-import com.project.recon.domain.user.repository.UserRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -22,7 +21,6 @@ import java.util.List;
 public class JwtTokenFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider jwtTokenProvider;
-    private final UserRepository userRepository;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
@@ -47,6 +45,8 @@ public class JwtTokenFilter extends OncePerRequestFilter {
 
                     SecurityContextHolder.getContext().setAuthentication(authentication);
 
+                } else {
+                    request.setAttribute("exception", "INVALID_TOKEN");
                 }
             } else if ("VALID".equals(tokenStatus)) {
                 request.setAttribute("exception", "INVALID_TOKEN");
