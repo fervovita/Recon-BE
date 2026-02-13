@@ -46,30 +46,39 @@ public class JwtTokenProvider {
                 .setSubject(user.getId().toString())
                 .setExpiration(expiryDate)
                 .claim("tokenType", tokenType)
+                .claim("role", user.getRole().name())
                 .setIssuedAt(now)
                 .signWith(getSecretKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
 
-    public boolean validateToken(String token) {
+    public String validateTokenWithError(String token) {
         try {
             Jwts.parserBuilder()
                     .setSigningKey(getSecretKey())
                     .build()
                     .parseClaimsJws(token);
-            return true;
+            return "VALID";
         } catch (ExpiredJwtException e) {
             log.error("만료된 JWT 토큰: {}", e.getMessage());
+            return "TOKEN_EXPIRED";
         } catch (UnsupportedJwtException e) {
             log.error("지원되지 않는 JWT 토큰: {}", e.getMessage());
+            return "INVALID_TOKEN";
         } catch (MalformedJwtException e) {
             log.error("잘못된 형식의 JWT 토큰: {}", e.getMessage());
+            return "INVALID_TOKEN";
         } catch (SignatureException e) {
             log.error("JWT 서명 검증 실패: {}", e.getMessage());
+            return "INVALID_TOKEN";
         } catch (IllegalArgumentException e) {
             log.error("JWT 토큰이 비어있음: {}", e.getMessage());
+            return "MISSING_TOKEN";
         }
-        return false;
+    }
+
+    public boolean validateToken(String token) {
+        return "VALID".equals(validateTokenWithError(token));
     }
 
     public boolean isAccessToken(String token) {
@@ -103,7 +112,7 @@ public class JwtTokenProvider {
     public Long getUserIdFromToken(String token) {
         try {
             Claims claims = Jwts.parserBuilder()
-                    .setSigningKey((getSecretKey()))
+                    .setSigningKey(getSecretKey())
                     .build()
                     .parseClaimsJws(token)
                     .getBody();
@@ -111,6 +120,21 @@ public class JwtTokenProvider {
             return Long.parseLong(claims.getSubject());
         } catch (JwtException e) {
             log.error("토큰에서 사용자 Id 추출 실패 : {}", e.getMessage());
+            return null;
+        }
+    }
+
+    public String getRoleFromToken(String token) {
+        try {
+            Claims claims = Jwts.parserBuilder()
+                    .setSigningKey(getSecretKey())
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+
+            return claims.get("role", String.class);
+        } catch (JwtException e) {
+            log.error("토큰에서 권한 추출 실패: {}", e.getMessage());
             return null;
         }
     }
