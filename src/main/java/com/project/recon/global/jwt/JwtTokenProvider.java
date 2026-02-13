@@ -46,6 +46,7 @@ public class JwtTokenProvider {
                 .setSubject(user.getId().toString())
                 .setExpiration(expiryDate)
                 .claim("tokenType", tokenType)
+                .claim("role", user.getRole().name())
                 .setIssuedAt(now)
                 .signWith(getSecretKey(), SignatureAlgorithm.HS256)
                 .compact();
@@ -111,7 +112,7 @@ public class JwtTokenProvider {
     public Long getUserIdFromToken(String token) {
         try {
             Claims claims = Jwts.parserBuilder()
-                    .setSigningKey((getSecretKey()))
+                    .setSigningKey(getSecretKey())
                     .build()
                     .parseClaimsJws(token)
                     .getBody();
@@ -119,6 +120,21 @@ public class JwtTokenProvider {
             return Long.parseLong(claims.getSubject());
         } catch (JwtException e) {
             log.error("토큰에서 사용자 Id 추출 실패 : {}", e.getMessage());
+            return null;
+        }
+    }
+
+    public String getRoleFromToken(String token) {
+        try {
+            Claims claims = Jwts.parserBuilder()
+                    .setSigningKey(getSecretKey())
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+
+            return claims.get("role", String.class);
+        } catch (JwtException e) {
+            log.error("토큰에서 권한 추출 실패: {}", e.getMessage());
             return null;
         }
     }

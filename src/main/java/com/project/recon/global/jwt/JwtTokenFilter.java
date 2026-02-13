@@ -1,6 +1,5 @@
 package com.project.recon.global.jwt;
 
-import com.project.recon.domain.user.entity.User;
 import com.project.recon.domain.user.repository.UserRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -9,12 +8,13 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.Optional;
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
@@ -35,17 +35,18 @@ public class JwtTokenFilter extends OncePerRequestFilter {
 
             if ("VALID".equals(tokenStatus) && jwtTokenProvider.isAccessToken(accessToken)) {
                 Long userId = jwtTokenProvider.getUserIdFromToken(accessToken);
+                String role = jwtTokenProvider.getRoleFromToken(accessToken);
 
-                if (userId != null) {
-                    Optional<User> user = userRepository.findById(userId);
-                    if (user.isPresent()) {
-                        UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                                user.get(),
-                                null,
-                                user.get().getAuthorities());
+                if (userId != null && role != null) {
 
-                        SecurityContextHolder.getContext().setAuthentication(authentication);
-                    }
+                    UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                            userId,
+                            null,
+                            List.of(new SimpleGrantedAuthority("ROLE_" + role))
+                    );
+
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+
                 }
             } else if ("VALID".equals(tokenStatus)) {
                 request.setAttribute("exception", "INVALID_TOKEN");
