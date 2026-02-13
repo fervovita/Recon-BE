@@ -51,25 +51,33 @@ public class JwtTokenProvider {
                 .compact();
     }
 
-    public boolean validateToken(String token) {
+    public String validateTokenWithError(String token) {
         try {
             Jwts.parserBuilder()
                     .setSigningKey(getSecretKey())
                     .build()
                     .parseClaimsJws(token);
-            return true;
+            return "VALID";
         } catch (ExpiredJwtException e) {
             log.error("만료된 JWT 토큰: {}", e.getMessage());
+            return "TOKEN_EXPIRED";
         } catch (UnsupportedJwtException e) {
             log.error("지원되지 않는 JWT 토큰: {}", e.getMessage());
+            return "INVALID_TOKEN";
         } catch (MalformedJwtException e) {
             log.error("잘못된 형식의 JWT 토큰: {}", e.getMessage());
+            return "INVALID_TOKEN";
         } catch (SignatureException e) {
             log.error("JWT 서명 검증 실패: {}", e.getMessage());
+            return "INVALID_TOKEN";
         } catch (IllegalArgumentException e) {
             log.error("JWT 토큰이 비어있음: {}", e.getMessage());
+            return "MISSING_TOKEN";
         }
-        return false;
+    }
+
+    public boolean validateToken(String token) {
+        return "VALID".equals(validateTokenWithError(token));
     }
 
     public boolean isAccessToken(String token) {

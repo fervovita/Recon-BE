@@ -29,22 +29,28 @@ public class JwtTokenFilter extends OncePerRequestFilter {
 
         String accessToken = resolveToken(request);
 
-        if (accessToken != null
-                && jwtTokenProvider.validateToken(accessToken)
-                && jwtTokenProvider.isAccessToken(accessToken)
-        ) {
-            Long userId = jwtTokenProvider.getUserIdFromToken(accessToken);
+        if (accessToken != null) {
 
-            if (userId != null) {
-                Optional<User> user = userRepository.findById(userId);
-                if (user.isPresent()) {
-                    UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                            user.get(),
-                            null,
-                            user.get().getAuthorities());
+            String tokenStatus = jwtTokenProvider.validateTokenWithError(accessToken);
 
-                    SecurityContextHolder.getContext().setAuthentication(authentication);
+            if ("VALID".equals(tokenStatus) && jwtTokenProvider.isAccessToken(accessToken)) {
+                Long userId = jwtTokenProvider.getUserIdFromToken(accessToken);
+
+                if (userId != null) {
+                    Optional<User> user = userRepository.findById(userId);
+                    if (user.isPresent()) {
+                        UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                                user.get(),
+                                null,
+                                user.get().getAuthorities());
+
+                        SecurityContextHolder.getContext().setAuthentication(authentication);
+                    }
                 }
+            } else if ("VALID".equals(tokenStatus)) {
+                request.setAttribute("exception", "INVALID_TOKEN");
+            } else {
+                request.setAttribute("exception", tokenStatus);
             }
         }
 
