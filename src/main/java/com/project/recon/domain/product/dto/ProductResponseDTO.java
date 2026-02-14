@@ -63,4 +63,12 @@ public class ProductResponseDTO {
         private String thumbnail;
         private LocalDateTime createdAt;
     }
+
+    @Getter
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @Builder
+    public static class CreateProductResponseDTO {
+        private Long id;
+    }
 }

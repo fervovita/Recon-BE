@@ -31,8 +31,7 @@ public class Product extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private CategoryType category;
 
-    @Lob
-    @Column(name = "description")
+    @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -42,4 +41,22 @@ public class Product extends BaseEntity {
     @OneToMany(mappedBy = "product", cascade = ALL, orphanRemoval = true)
     @Builder.Default
     private List<ProductImage> images = new ArrayList<>();
+
+
+    public static Product createProduct(String productName, Long price, CategoryType category, String description, User seller) {
+        return Product.builder()
+                .productName(productName)
+                .price(price)
+                .category(category)
+                .description(description)
+                .seller(seller)
+                .build();
+    }
+
+
+    public void addImage(ProductImage image) {
+        this.images.add(image);
+        image.assignProduct(this);
+        image.assignImageOrder(this.images.size() - 1);
+    }
 }

@@ -24,4 +24,12 @@ public class ProductImage extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
+
+    public void assignProduct(Product product) {
+        this.product = product;
+    }
+
+    public void assignImageOrder(int imageOrder) {
+        this.imageOrder = imageOrder;
+    }
 }
