@@ -50,4 +50,17 @@ public class ProductResponseDTO {
                     .build();
         }
     }
+
+    @Getter
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @Builder
+    public static class ProductListResponseDTO {
+        private Long id;
+        private String name;
+        private Long price;
+        private CategoryType category;
+        private String thumbnail;
+        private LocalDateTime createdAt;
+    }
 }
