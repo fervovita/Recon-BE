@@ -19,7 +19,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -106,27 +105,12 @@ public class ProductServiceImpl implements ProductService {
 
         // 상품 이미지를 S3에 업로드
         if (images != null && !images.isEmpty()) {
-            List<String> uploadedUrls = new ArrayList<>();
+            List<String> imageUrls = s3Service.uploadFiles(images, "product-image");
 
-            try {
-                for (MultipartFile file : images) {
-
-                    String imageUrl = s3Service.upload(file, "product-image");
-                    uploadedUrls.add(imageUrl);
-
-                    ProductImage productImage = ProductImage.builder()
-                            .imageUrl(imageUrl)
-                            .build();
-
-                    product.addImage(productImage);
-                }
-            } catch (Exception e) {
-                // 이미 업로드된 파일 모두 삭제
-                uploadedUrls.forEach(s3Service::delete);
-
-                log.error("S3 업로드 중 예외 발생: {}", e.getMessage());
-                throw new GeneralException(GeneralErrorCode.FILE_UPLOAD_FAILED);
-            }
+            imageUrls.forEach(url -> {
+                ProductImage productImage = ProductImage.builder().imageUrl(url).build();
+                product.addImage(productImage);
+            });
         }
 
         // 상품 저장

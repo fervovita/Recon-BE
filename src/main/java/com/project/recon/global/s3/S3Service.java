@@ -11,6 +11,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -38,5 +41,26 @@ public class S3Service {
 
     public void delete(String fileUrl) {
         s3Template.deleteObject(fileUrl);
+    }
+
+
+    public List<String> uploadFiles(List<MultipartFile> files, String dirName) {
+        if (files == null || files.isEmpty())
+            return Collections.emptyList();
+
+        List<String> uploadedUrls = new ArrayList<>();
+
+        try {
+            for (MultipartFile file : files) {
+                uploadedUrls.add(upload(file, dirName));
+            }
+
+            return uploadedUrls;
+        } catch (Exception e) {
+            // 이미 업로드된 파일 모두 삭제
+            uploadedUrls.forEach(this::delete);
+
+            throw new GeneralException(GeneralErrorCode.FILE_UPLOAD_FAILED);
+        }
     }
 }
