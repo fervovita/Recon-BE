@@ -16,4 +16,6 @@ public interface ProductService {
     Slice<ProductResponseDTO.ProductListResponseDTO> getProducts(String keyword, CategoryType category, Pageable pageable);
 
     ProductResponseDTO.CreateProductResponseDTO createProduct(Long userId, ProductRequestDTO.CreateProductRequestDTO request, List<MultipartFile> images);
+
+    ProductResponseDTO.DeleteProductResponseDTO deleteProduct(Long userId, Long productId);
 }

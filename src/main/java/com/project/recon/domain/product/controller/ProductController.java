@@ -55,4 +55,13 @@ public class ProductController {
         ProductResponseDTO.CreateProductResponseDTO response = productService.createProduct(userId, request, images);
         return ApiResponse.onSuccess("상품 등록 성공", response);
     }
+
+    @Operation(summary = "상품 삭제")
+    @DeleteMapping("/{productId}")
+    public ApiResponse<ProductResponseDTO.DeleteProductResponseDTO> deleteProduct(
+            @AuthenticationPrincipal Long userId,
+            @PathVariable Long productId) {
+        ProductResponseDTO.DeleteProductResponseDTO response = productService.deleteProduct(userId, productId);
+        return ApiResponse.onSuccess("상품 삭제 성공", response);
+    }
 }

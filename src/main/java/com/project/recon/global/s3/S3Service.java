@@ -40,7 +40,18 @@ public class S3Service {
     }
 
     public void delete(String fileUrl) {
-        s3Template.deleteObject(fileUrl);
+        try {
+            // 전체 URL에서 경로 부분만 추출
+            String path = new java.net.URL(fileUrl).getPath();
+
+            // 맨 앞의 '/' 제거
+            String key = path.substring(1);
+            
+            s3Template.deleteObject(bucket, key);
+        } catch (Exception e) {
+            log.error("S3 파일 삭제 실패: {}", e.getMessage());
+            throw new GeneralException(GeneralErrorCode.FILE_DELETE_FAILED);
+        }
     }
 
 

@@ -32,9 +32,11 @@ public enum GeneralErrorCode implements BaseErrorCode {
 
     // 상품 에러
     FILE_UPLOAD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "PRODUCT_5001", "파일 업로드에 실패했습니다."),
+    FILE_DELETE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "PRODUCT_5002", "파일 삭제에 실패했습니다."),
     PRODUCT_NOT_FOUND(HttpStatus.NOT_FOUND, "PRODUCT_4041", "존재하지 않는 상품입니다."),
     INVALID_FILE(HttpStatus.BAD_REQUEST, "PRODUCT_4001", "유효하지 않은 파일입니다."),
     INVALID_FILE_TYPE(HttpStatus.BAD_REQUEST, "PRODUCT_4002", "이미지 파일만 업로드 가능합니다."),
+    PRODUCT_NOT_SELLER(HttpStatus.FORBIDDEN, "PRODUCT_4031", "상품의 판매자가 아닙니다."),
 
     // 주문 에러
     ORDER_NOT_FOUND(HttpStatus.NOT_FOUND, "ORD_4041", "존재하지 않는 주문입니다."),

@@ -131,4 +131,34 @@ public class ProductServiceImpl implements ProductService {
             throw new GeneralException(GeneralErrorCode.INVALID_FILE_TYPE);
         }
     }
+
+    @Override
+    @Transactional
+    public ProductResponseDTO.DeleteProductResponseDTO deleteProduct(Long userId, Long productId) {
+
+        // 상품 조회
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new GeneralException(GeneralErrorCode.PRODUCT_NOT_FOUND));
+
+        // 판매자인지 확인
+        if (!product.getSeller().getId().equals(userId)) {
+            throw new GeneralException(GeneralErrorCode.PRODUCT_NOT_SELLER);
+        }
+
+        // 삭제할 이미지 url 미리 추출
+        List<String> imageUrls = product.getImages().stream()
+                .map(ProductImage::getImageUrl)
+                .toList();
+
+        // 상품 삭제
+        productRepository.deleteById(productId);
+
+        // S3에서 이미지 삭제
+        imageUrls.forEach(s3Service::delete);
+
+        return ProductResponseDTO.DeleteProductResponseDTO.builder()
+                .id(product.getId())
+                .build();
+    }
+
 }
