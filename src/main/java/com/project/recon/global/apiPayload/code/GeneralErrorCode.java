@@ -36,6 +36,7 @@ public enum GeneralErrorCode implements BaseErrorCode {
     PRODUCT_NOT_FOUND(HttpStatus.NOT_FOUND, "PRODUCT_4041", "존재하지 않는 상품입니다."),
     INVALID_FILE(HttpStatus.BAD_REQUEST, "PRODUCT_4001", "유효하지 않은 파일입니다."),
     INVALID_FILE_TYPE(HttpStatus.BAD_REQUEST, "PRODUCT_4002", "이미지 파일만 업로드 가능합니다."),
+    INVALID_FILE_ORDER(HttpStatus.BAD_REQUEST, "PRODUCT_4003", "파일의 순서가 잘못되었습니다."),
     PRODUCT_NOT_SELLER(HttpStatus.FORBIDDEN, "PRODUCT_4031", "상품의 판매자가 아닙니다."),
 
     // 주문 에러

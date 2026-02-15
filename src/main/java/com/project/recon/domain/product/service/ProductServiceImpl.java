@@ -173,24 +173,59 @@ public class ProductServiceImpl implements ProductService {
             );
         }
 
-
         // 이미지 교체
-        if (newImages != null && !newImages.isEmpty()) {
-            newImages.forEach(this::validateImageFile);
+        List<String> imageOrder = (request != null) ? request.getImageOrder() : null;
+
+        if (imageOrder != null && !imageOrder.isEmpty()) {
+
+            // 새 파일 유효성 검증
+            if (newImages != null && !newImages.isEmpty()) {
+                newImages.forEach(this::validateImageFile);
+            }
 
             // 삭제할 이미지 url 미리 추출
             List<String> oldImageUrls = product.getImages().stream()
                     .map(ProductImage::getImageUrl)
                     .toList();
 
-            // 새 이미지 업로드 후 교체
-            List<String> newUrls = s3Service.uploadFiles(newImages, "product-image");
-            product.getImages().clear();
-            newUrls.forEach(url -> product.addImage(ProductImage.builder().imageUrl(url).build()));
+            // 새 파일 업로드
+            List<String> uploadedUrls = (newImages != null && !newImages.isEmpty())
+                    ? s3Service.uploadFiles(newImages, "product-image")
+                    : List.of();
 
-            // S3에서 이미지 삭제
-            oldImageUrls.forEach(s3Service::delete);
+            // DB 이미지 삭제
+            product.getImages().clear();
+
+            // imageOrder 순서대로 이미지 추가
+            for (String entry : imageOrder) {
+                String url;
+
+                if (entry.startsWith("NEW_")) {
+                    int index = Integer.parseInt(entry.substring(4));
+
+                    if (index < uploadedUrls.size()) {
+                        url = uploadedUrls.get(index);
+                    } else {
+                        uploadedUrls.forEach(s3Service::delete);    // 이미 업로드된 S3 파일 삭제
+                        throw new GeneralException(GeneralErrorCode.INVALID_FILE_ORDER);
+                    }
+                } else {
+                    url = entry;    // 기존 S3 URL
+                }
+
+                product.addImage(ProductImage.builder().imageUrl(url).build());
+            }
+
+            // S3에서 imageOrder에 없는 이미지 삭제
+            List<String> keepUrls = imageOrder.stream()
+                    .filter(entry -> !entry.startsWith("NEW_"))
+                    .toList();
+
+            oldImageUrls.stream()
+                    .filter(url -> !keepUrls.contains(url))
+                    .forEach(s3Service::delete);
         }
+
 
         return ProductResponseDTO.UpdateProductResponseDTO.builder()
                 .id(product.getId())
