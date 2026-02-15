@@ -19,7 +19,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -197,23 +199,43 @@ public class ProductServiceImpl implements ProductService {
             product.getImages().clear();
 
             // imageOrder 순서대로 이미지 추가
+            Set<Integer> usedNewIndexes = new HashSet<>();
+
             for (String entry : imageOrder) {
                 String url;
 
                 if (entry.startsWith("NEW_")) {
-                    int index = Integer.parseInt(entry.substring(4));
+                    int index;
 
-                    if (index < uploadedUrls.size()) {
-                        url = uploadedUrls.get(index);
-                    } else {
+                    try {
+                        index = Integer.parseInt(entry.substring(4));
+                    } catch (NumberFormatException e) {
+                        throw new GeneralException(GeneralErrorCode.INVALID_FILE_ORDER);
+                    }
+
+                    if (index < 0 || index >= uploadedUrls.size()) {
                         uploadedUrls.forEach(s3Service::delete);    // 이미 업로드된 S3 파일 삭제
                         throw new GeneralException(GeneralErrorCode.INVALID_FILE_ORDER);
                     }
+
+                    usedNewIndexes.add(index);
+                    url = uploadedUrls.get(index);
                 } else {
+                    if (!oldImageUrls.contains(entry)) {
+                        uploadedUrls.forEach(s3Service::delete);    // 이미 업로드된 S3 파일 삭제
+                        throw new GeneralException(GeneralErrorCode.INVALID_FILE_ORDER);
+                    }
                     url = entry;    // 기존 S3 URL
                 }
 
                 product.addImage(ProductImage.builder().imageUrl(url).build());
+            }
+
+            // S3에 업로드한 사용되지 않는 이미지 삭제
+            for (int i = 0; i < uploadedUrls.size(); i++) {
+                if (!usedNewIndexes.contains(i)) {
+                    s3Service.delete(uploadedUrls.get(i));
+                }
             }
 
             // S3에서 imageOrder에 없는 이미지 삭제
