@@ -177,75 +177,8 @@ public class ProductServiceImpl implements ProductService {
 
         // 이미지 교체
         List<String> imageOrder = (request != null) ? request.getImageOrder() : null;
-
-        if (imageOrder != null && !imageOrder.isEmpty()) {
-
-            // 새 파일 유효성 검증
-            if (newImages != null && !newImages.isEmpty()) {
-                newImages.forEach(this::validateImageFile);
-            }
-
-            // 삭제할 이미지 url 미리 추출
-            List<String> oldImageUrls = product.getImages().stream()
-                    .map(ProductImage::getImageUrl)
-                    .toList();
-
-            // 새 파일 업로드
-            List<String> uploadedUrls = (newImages != null && !newImages.isEmpty())
-                    ? s3Service.uploadFiles(newImages, "product-image")
-                    : List.of();
-
-            // DB 이미지 삭제
-            product.getImages().clear();
-
-            // imageOrder 순서대로 이미지 추가
-            Set<Integer> usedNewIndexes = new HashSet<>();
-
-            for (String entry : imageOrder) {
-                String url;
-
-                if (entry.startsWith("NEW_")) {
-                    int index;
-
-                    try {
-                        index = Integer.parseInt(entry.substring(4));
-                    } catch (NumberFormatException e) {
-                        throw new GeneralException(GeneralErrorCode.INVALID_FILE_ORDER);
-                    }
-
-                    if (index < 0 || index >= uploadedUrls.size()) {
-                        uploadedUrls.forEach(s3Service::delete);    // 이미 업로드된 S3 파일 삭제
-                        throw new GeneralException(GeneralErrorCode.INVALID_FILE_ORDER);
-                    }
-
-                    usedNewIndexes.add(index);
-                    url = uploadedUrls.get(index);
-                } else {
-                    if (!oldImageUrls.contains(entry)) {
-                        uploadedUrls.forEach(s3Service::delete);    // 이미 업로드된 S3 파일 삭제
-                        throw new GeneralException(GeneralErrorCode.INVALID_FILE_ORDER);
-                    }
-                    url = entry;    // 기존 S3 URL
-                }
-
-                product.addImage(ProductImage.builder().imageUrl(url).build());
-            }
-
-            // S3에 업로드한 사용되지 않는 이미지 삭제
-            for (int i = 0; i < uploadedUrls.size(); i++) {
-                if (!usedNewIndexes.contains(i)) {
-                    s3Service.delete(uploadedUrls.get(i));
-                }
-            }
-
-            // S3에서 imageOrder에 없는 이미지 삭제
-            List<String> keepUrls = imageOrder.stream()
-                    .filter(entry -> !entry.startsWith("NEW_"))
-                    .toList();
-
-            oldImageUrls.stream()
-                    .filter(url -> !keepUrls.contains(url))
-                    .forEach(s3Service::delete);
+        if (imageOrder != null) {
+            replaceImageUrl(product, imageOrder, newImages);
         }
 
 
@@ -259,6 +192,82 @@ public class ProductServiceImpl implements ProductService {
                 .imageUrls(product.getImages().stream().map(ProductImage::getImageUrl).toList())
                 .createdAt(product.getCreatedAt())
                 .build();
+    }
+
+    private void replaceImageUrl(Product product, List<String> imageOrder, List<MultipartFile> newImages) {
+
+
+        // 새 파일 유효성 검증
+        if (newImages != null && !newImages.isEmpty()) {
+            newImages.forEach(this::validateImageFile);
+        }
+
+        // 삭제할 이미지 url 미리 추출
+        List<String> oldImageUrls = product.getImages().stream()
+                .map(ProductImage::getImageUrl)
+                .toList();
+
+        // 새 파일 업로드
+        List<String> uploadedUrls = (newImages != null && !newImages.isEmpty())
+                ? s3Service.uploadFiles(newImages, "product-image")
+                : List.of();
+
+        // DB 이미지 삭제
+        product.getImages().clear();
+
+        // imageOrder 순서대로 이미지 추가
+        Set<Integer> usedNewIndexes = new HashSet<>();
+
+        for (String entry : imageOrder) {
+            String url = resolveImageUrl(entry, uploadedUrls, oldImageUrls, usedNewIndexes);
+            product.addImage(ProductImage.builder().imageUrl(url).build());
+        }
+
+        // S3에 업로드한 사용되지 않는 이미지 삭제 (새로 업로드한 이미지 중 실제로는 imageOrder에 없어 사용 X)
+        for (int i = 0; i < uploadedUrls.size(); i++) {
+            if (!usedNewIndexes.contains(i)) {
+                s3Service.delete(uploadedUrls.get(i));
+            }
+        }
+
+        // S3에서 imageOrder에 없는 이미지 삭제
+        List<String> keepUrls = imageOrder.stream()
+                .filter(entry -> !entry.startsWith("NEW_"))
+                .toList();
+
+        oldImageUrls.stream()
+                .filter(url -> !keepUrls.contains(url))
+                .forEach(s3Service::delete);
+    }
+
+    private String resolveImageUrl(String entry, List<String> uploadedUrls, List<String> oldImageUrls, Set<Integer> usedNewIndexes) {
+
+        if (entry.startsWith("NEW_")) {
+            int index;
+
+            try {
+                index = Integer.parseInt(entry.substring(4));
+            } catch (NumberFormatException e) {
+                uploadedUrls.forEach(s3Service::delete);
+                throw new GeneralException(GeneralErrorCode.INVALID_FILE_ORDER);
+            }
+
+            if (index < 0 || index >= uploadedUrls.size()) {
+                uploadedUrls.forEach(s3Service::delete);    // 이미 업로드된 S3 파일 삭제
+                throw new GeneralException(GeneralErrorCode.INVALID_FILE_ORDER);
+            }
+
+            usedNewIndexes.add(index);
+            return uploadedUrls.get(index);
+        }
+
+        if (!oldImageUrls.contains(entry)) {
+            uploadedUrls.forEach(s3Service::delete);    // 이미 업로드된 S3 파일 삭제
+            throw new GeneralException(GeneralErrorCode.INVALID_FILE_ORDER);
+        }
+
+        return entry;
+
     }
 
 
