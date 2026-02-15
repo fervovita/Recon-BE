@@ -121,17 +121,6 @@ public class ProductServiceImpl implements ProductService {
                 .build();
     }
 
-    private void validateImageFile(MultipartFile file) {
-        if (file.isEmpty()) {
-            throw new GeneralException(GeneralErrorCode.INVALID_FILE);
-        }
-
-        String contentType = file.getContentType();
-        if (contentType == null || !contentType.startsWith("image/")) {
-            throw new GeneralException(GeneralErrorCode.INVALID_FILE_TYPE);
-        }
-    }
-
     @Override
     @Transactional
     public ProductResponseDTO.DeleteProductResponseDTO deleteProduct(Long userId, Long productId) {
@@ -161,4 +150,69 @@ public class ProductServiceImpl implements ProductService {
                 .build();
     }
 
+    @Override
+    @Transactional
+    public ProductResponseDTO.UpdateProductResponseDTO updateProduct(Long userId, Long productId, ProductRequestDTO.UpdateProductRequestDTO request, List<MultipartFile> newImages) {
+
+        // 상품 조회
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new GeneralException(GeneralErrorCode.PRODUCT_NOT_FOUND));
+
+        // 판매자인지 확인
+        if (!product.getSeller().getId().equals(userId)) {
+            throw new GeneralException(GeneralErrorCode.PRODUCT_NOT_SELLER);
+        }
+
+        // 상품 정보 수정
+        if (request != null) {
+            product.update(
+                    request.getName(),
+                    request.getPrice(),
+                    request.getCategory(),
+                    request.getDescription()
+            );
+        }
+
+
+        // 이미지 교체
+        if (newImages != null && !newImages.isEmpty()) {
+            newImages.forEach(this::validateImageFile);
+
+            // 삭제할 이미지 url 미리 추출
+            List<String> oldImageUrls = product.getImages().stream()
+                    .map(ProductImage::getImageUrl)
+                    .toList();
+
+            // 새 이미지 업로드 후 교체
+            List<String> newUrls = s3Service.uploadFiles(newImages, "product-image");
+            product.getImages().clear();
+            newUrls.forEach(url -> product.addImage(ProductImage.builder().imageUrl(url).build()));
+
+            // S3에서 이미지 삭제
+            oldImageUrls.forEach(s3Service::delete);
+        }
+
+        return ProductResponseDTO.UpdateProductResponseDTO.builder()
+                .id(product.getId())
+                .name(product.getProductName())
+                .price(product.getPrice())
+                .category(product.getCategory())
+                .description(product.getDescription())
+                .seller(ProductResponseDTO.SellerInfo.from(product.getSeller()))
+                .imageUrls(product.getImages().stream().map(ProductImage::getImageUrl).toList())
+                .createdAt(product.getCreatedAt())
+                .build();
+    }
+
+
+    private void validateImageFile(MultipartFile file) {
+        if (file.isEmpty()) {
+            throw new GeneralException(GeneralErrorCode.INVALID_FILE);
+        }
+
+        String contentType = file.getContentType();
+        if (contentType == null || !contentType.startsWith("image/")) {
+            throw new GeneralException(GeneralErrorCode.INVALID_FILE_TYPE);
+        }
+    }
 }

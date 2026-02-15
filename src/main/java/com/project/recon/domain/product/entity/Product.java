@@ -53,10 +53,21 @@ public class Product extends BaseEntity {
                 .build();
     }
 
+    public void update(String productName, Long price, CategoryType category, String description) {
+        if (productName != null) this.productName = productName;
+        if (price != null) this.price = price;
+        if (category != null) this.category = category;
+        if (description != null) this.description = description;
+    }
+
 
     public void addImage(ProductImage image) {
         this.images.add(image);
         image.assignProduct(this);
         image.assignImageOrder(this.images.size() - 1);
+    }
+
+    public void removeImage(ProductImage image) {
+        this.images.remove(image);
     }
 }

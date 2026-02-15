@@ -64,4 +64,15 @@ public class ProductController {
         ProductResponseDTO.DeleteProductResponseDTO response = productService.deleteProduct(userId, productId);
         return ApiResponse.onSuccess("상품 삭제 성공", response);
     }
+
+    @Operation(summary = "상품 수정")
+    @PatchMapping(value = "/{productId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ApiResponse<ProductResponseDTO.UpdateProductResponseDTO> updateProduct(
+            @AuthenticationPrincipal Long userId,
+            @PathVariable Long productId,
+            @Valid @RequestPart(value = "productData", required = false) ProductRequestDTO.UpdateProductRequestDTO request,
+            @RequestPart(value = "images", required = false) List<MultipartFile> images) {
+        ProductResponseDTO.UpdateProductResponseDTO response = productService.updateProduct(userId, productId, request, images);
+        return ApiResponse.onSuccess("상품 수정 성공", response);
+    }
 }

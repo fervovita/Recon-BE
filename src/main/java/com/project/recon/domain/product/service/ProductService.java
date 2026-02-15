@@ -18,4 +18,6 @@ public interface ProductService {
     ProductResponseDTO.CreateProductResponseDTO createProduct(Long userId, ProductRequestDTO.CreateProductRequestDTO request, List<MultipartFile> images);
 
     ProductResponseDTO.DeleteProductResponseDTO deleteProduct(Long userId, Long productId);
+
+    ProductResponseDTO.UpdateProductResponseDTO updateProduct(Long userId, Long productId, ProductRequestDTO.UpdateProductRequestDTO request, List<MultipartFile> newImages);
 }

@@ -79,4 +79,26 @@ public class ProductResponseDTO {
     public static class DeleteProductResponseDTO {
         private Long id;
     }
+
+    @Getter
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @Builder
+    public static class UpdateProductResponseDTO {
+        private Long id;
+
+        private String name;
+
+        private String description;
+
+        private List<String> imageUrls;
+
+        private Long price;
+
+        private SellerInfo seller;
+
+        private CategoryType category;
+
+        private LocalDateTime createdAt;
+    }
 }
