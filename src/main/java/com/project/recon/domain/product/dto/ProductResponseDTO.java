@@ -71,4 +71,12 @@ public class ProductResponseDTO {
     public static class CreateProductResponseDTO {
         private Long id;
     }
+
+    @Getter
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @Builder
+    public static class DeleteProductResponseDTO {
+        private Long id;
+    }
 }
