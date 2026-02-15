@@ -8,6 +8,8 @@ import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 
+import java.util.List;
+
 public class ProductRequestDTO {
 
     @Getter
@@ -25,5 +27,21 @@ public class ProductRequestDTO {
         @NotBlank(message = "상품 설명이 없습니다.")
         @Size(max = 15000, message = "상품 설명은 15,000자 이내로 입력해주세요.")  // TEXT 기준
         private String description;
+    }
+
+    @Getter
+    public static class UpdateProductRequestDTO {
+
+        private String name;
+
+        @Positive(message = "가격은 0보다 커야 합니다.")
+        private Long price;
+
+        private CategoryType category;
+
+        @Size(max = 15000, message = "상품 설명은 15,000자 이내로 입력해주세요.")  // TEXT 기준
+        private String description;
+
+        private List<String> imageOrder;
     }
 }

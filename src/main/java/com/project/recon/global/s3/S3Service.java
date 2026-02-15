@@ -46,11 +46,10 @@ public class S3Service {
 
             // 맨 앞의 '/' 제거
             String key = path.substring(1);
-            
+
             s3Template.deleteObject(bucket, key);
         } catch (Exception e) {
             log.error("S3 파일 삭제 실패: {}", e.getMessage());
-            throw new GeneralException(GeneralErrorCode.FILE_DELETE_FAILED);
         }
     }
 

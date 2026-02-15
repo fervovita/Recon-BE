@@ -64,4 +64,26 @@ public class ProductController {
         ProductResponseDTO.DeleteProductResponseDTO response = productService.deleteProduct(userId, productId);
         return ApiResponse.onSuccess("상품 삭제 성공", response);
     }
+
+    @Operation(summary = "상품 수정", description = """
+            **imageOrder 사용법:**
+            - 기존 이미지 유지: S3 URL을 그대로 입력 (예: "https://s3.../image1.jpg")
+            - 새 이미지 추가: "NEW_인덱스" 형식 (예: "NEW_0" → images의 0번째 파일)
+            - imageOrder의 순서가 곧 사용자가 첨부한 이미지 파일의 순서가 됩니다.
+            - imageOrder에 포함되지 않은 기존 이미지는 자동 삭제됩니다.
+            
+            **예시:**
+            - imageOrder: ["https://s3.../url1", "NEW_0", "https://s3.../url2", "NEW_1"]
+            - images: [새파일A.png, 새파일B.png]
+            - 결과: url1 → 새파일A → url2 → 새파일B
+            """)
+    @PatchMapping(value = "/{productId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ApiResponse<ProductResponseDTO.UpdateProductResponseDTO> updateProduct(
+            @AuthenticationPrincipal Long userId,
+            @PathVariable Long productId,
+            @Valid @RequestPart(value = "productData", required = false) ProductRequestDTO.UpdateProductRequestDTO request,
+            @RequestPart(value = "images", required = false) List<MultipartFile> images) {
+        ProductResponseDTO.UpdateProductResponseDTO response = productService.updateProduct(userId, productId, request, images);
+        return ApiResponse.onSuccess("상품 수정 성공", response);
+    }
 }

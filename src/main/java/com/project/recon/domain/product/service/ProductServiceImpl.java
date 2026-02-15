@@ -19,7 +19,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -121,17 +123,6 @@ public class ProductServiceImpl implements ProductService {
                 .build();
     }
 
-    private void validateImageFile(MultipartFile file) {
-        if (file.isEmpty()) {
-            throw new GeneralException(GeneralErrorCode.INVALID_FILE);
-        }
-
-        String contentType = file.getContentType();
-        if (contentType == null || !contentType.startsWith("image/")) {
-            throw new GeneralException(GeneralErrorCode.INVALID_FILE_TYPE);
-        }
-    }
-
     @Override
     @Transactional
     public ProductResponseDTO.DeleteProductResponseDTO deleteProduct(Long userId, Long productId) {
@@ -161,4 +152,133 @@ public class ProductServiceImpl implements ProductService {
                 .build();
     }
 
+    @Override
+    @Transactional
+    public ProductResponseDTO.UpdateProductResponseDTO updateProduct(Long userId, Long productId, ProductRequestDTO.UpdateProductRequestDTO request, List<MultipartFile> newImages) {
+
+        // 상품 조회
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new GeneralException(GeneralErrorCode.PRODUCT_NOT_FOUND));
+
+        // 판매자인지 확인
+        if (!product.getSeller().getId().equals(userId)) {
+            throw new GeneralException(GeneralErrorCode.PRODUCT_NOT_SELLER);
+        }
+
+        // 상품 정보 수정
+        if (request != null) {
+            product.update(
+                    request.getName(),
+                    request.getPrice(),
+                    request.getCategory(),
+                    request.getDescription()
+            );
+        }
+
+        // 이미지 교체
+        List<String> imageOrder = (request != null) ? request.getImageOrder() : null;
+        if (imageOrder != null) {
+            replaceImageUrl(product, imageOrder, newImages);
+        }
+
+
+        return ProductResponseDTO.UpdateProductResponseDTO.builder()
+                .id(product.getId())
+                .name(product.getProductName())
+                .price(product.getPrice())
+                .category(product.getCategory())
+                .description(product.getDescription())
+                .seller(ProductResponseDTO.SellerInfo.from(product.getSeller()))
+                .imageUrls(product.getImages().stream().map(ProductImage::getImageUrl).toList())
+                .createdAt(product.getCreatedAt())
+                .build();
+    }
+
+    private void replaceImageUrl(Product product, List<String> imageOrder, List<MultipartFile> newImages) {
+
+
+        // 새 파일 유효성 검증
+        if (newImages != null && !newImages.isEmpty()) {
+            newImages.forEach(this::validateImageFile);
+        }
+
+        // 삭제할 이미지 url 미리 추출
+        List<String> oldImageUrls = product.getImages().stream()
+                .map(ProductImage::getImageUrl)
+                .toList();
+
+        // 새 파일 업로드
+        List<String> uploadedUrls = (newImages != null && !newImages.isEmpty())
+                ? s3Service.uploadFiles(newImages, "product-image")
+                : List.of();
+
+        // DB 이미지 삭제
+        product.getImages().clear();
+
+        // imageOrder 순서대로 이미지 추가
+        Set<Integer> usedNewIndexes = new HashSet<>();
+
+        for (String entry : imageOrder) {
+            String url = resolveImageUrl(entry, uploadedUrls, oldImageUrls, usedNewIndexes);
+            product.addImage(ProductImage.builder().imageUrl(url).build());
+        }
+
+        // S3에 업로드한 사용되지 않는 이미지 삭제 (새로 업로드한 이미지 중 실제로는 imageOrder에 없어 사용 X)
+        for (int i = 0; i < uploadedUrls.size(); i++) {
+            if (!usedNewIndexes.contains(i)) {
+                s3Service.delete(uploadedUrls.get(i));
+            }
+        }
+
+        // S3에서 imageOrder에 없는 이미지 삭제
+        List<String> keepUrls = imageOrder.stream()
+                .filter(entry -> !entry.startsWith("NEW_"))
+                .toList();
+
+        oldImageUrls.stream()
+                .filter(url -> !keepUrls.contains(url))
+                .forEach(s3Service::delete);
+    }
+
+    private String resolveImageUrl(String entry, List<String> uploadedUrls, List<String> oldImageUrls, Set<Integer> usedNewIndexes) {
+
+        if (entry.startsWith("NEW_")) {
+            int index;
+
+            try {
+                index = Integer.parseInt(entry.substring(4));
+            } catch (NumberFormatException e) {
+                uploadedUrls.forEach(s3Service::delete);
+                throw new GeneralException(GeneralErrorCode.INVALID_FILE_ORDER);
+            }
+
+            if (index < 0 || index >= uploadedUrls.size()) {
+                uploadedUrls.forEach(s3Service::delete);    // 이미 업로드된 S3 파일 삭제
+                throw new GeneralException(GeneralErrorCode.INVALID_FILE_ORDER);
+            }
+
+            usedNewIndexes.add(index);
+            return uploadedUrls.get(index);
+        }
+
+        if (!oldImageUrls.contains(entry)) {
+            uploadedUrls.forEach(s3Service::delete);    // 이미 업로드된 S3 파일 삭제
+            throw new GeneralException(GeneralErrorCode.INVALID_FILE_ORDER);
+        }
+
+        return entry;
+
+    }
+
+
+    private void validateImageFile(MultipartFile file) {
+        if (file.isEmpty()) {
+            throw new GeneralException(GeneralErrorCode.INVALID_FILE);
+        }
+
+        String contentType = file.getContentType();
+        if (contentType == null || !contentType.startsWith("image/")) {
+            throw new GeneralException(GeneralErrorCode.INVALID_FILE_TYPE);
+        }
+    }
 }
