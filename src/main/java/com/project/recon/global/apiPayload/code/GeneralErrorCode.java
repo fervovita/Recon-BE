@@ -39,6 +39,11 @@ public enum GeneralErrorCode implements BaseErrorCode {
     INVALID_FILE_ORDER(HttpStatus.BAD_REQUEST, "PRODUCT_4003", "파일의 순서가 잘못되었습니다."),
     PRODUCT_NOT_SELLER(HttpStatus.FORBIDDEN, "PRODUCT_4031", "상품의 판매자가 아닙니다."),
 
+    // 리뷰 에러
+    REVIEW_SELLER_NOT_ALLOWED(HttpStatus.FORBIDDEN, "REVIEW_4031", "판매자는 후기를 남길 수 없습니다."),
+    DUPLICATE_REVIEW(HttpStatus.BAD_REQUEST, "REVIEW_4001", "이미 후기를 작성한 상품입니다."),
+    REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND, "REVIEW_4041", "존재하지 않는 후기입니다."),
+
     // 주문 에러
     ORDER_NOT_FOUND(HttpStatus.NOT_FOUND, "ORD_4041", "존재하지 않는 주문입니다."),
     ORDER_CANNOT_CANCEL(HttpStatus.BAD_REQUEST, "ORD_4001", "배송이 시작되어 취소가 불가능합니다."),
