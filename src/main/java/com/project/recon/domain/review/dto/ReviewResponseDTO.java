@@ -14,4 +14,12 @@ public class ReviewResponseDTO {
     public static class CreateReviewResponseDTO {
         private Long id;
     }
+
+    @Getter
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @Builder
+    public static class DeleteReviewResponseDTO {
+        private Long id;
+    }
 }
