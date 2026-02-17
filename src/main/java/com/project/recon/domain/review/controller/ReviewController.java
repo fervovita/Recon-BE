@@ -33,4 +33,14 @@ public class ReviewController {
         ReviewResponseDTO.CreateReviewResponseDTO response = reviewService.createReview(userId, productId, request, images);
         return ApiResponse.onSuccess("후기 등록 성공", response);
     }
+
+    @Operation(summary = "후기 삭제")
+    @DeleteMapping("/{reviewId}")
+    public ApiResponse<ReviewResponseDTO.DeleteReviewResponseDTO> deleteReview(
+            @AuthenticationPrincipal Long userId,
+            @PathVariable Long productId,
+            @PathVariable Long reviewId) {
+        ReviewResponseDTO.DeleteReviewResponseDTO response = reviewService.deleteReview(userId, productId, reviewId);
+        return ApiResponse.onSuccess("후기 삭제 성공", response);
+    }
 }

@@ -9,4 +9,6 @@ import java.util.List;
 public interface ReviewService {
 
     ReviewResponseDTO.CreateReviewResponseDTO createReview(Long userId, Long productId, ReviewRequestDTO.CreateReviewRequestDTO request, List<MultipartFile> images);
+
+    ReviewResponseDTO.DeleteReviewResponseDTO deleteReview(Long userId, Long productId, Long reviewId);
 }

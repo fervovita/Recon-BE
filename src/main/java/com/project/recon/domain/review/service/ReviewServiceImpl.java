@@ -87,6 +87,40 @@ public class ReviewServiceImpl implements ReviewService {
 
     }
 
+    @Override
+    @Transactional
+    public ReviewResponseDTO.DeleteReviewResponseDTO deleteReview(Long userId, Long productId, Long reviewId) {
+
+        // 후기 조회
+        Review review = reviewRepository.findById(reviewId)
+                .orElseThrow(() -> new GeneralException(GeneralErrorCode.REVIEW_NOT_FOUND));
+
+        // 해당 상품의 후기인지 확인
+        if (!review.getProduct().getId().equals(productId)) {
+            throw new GeneralException(GeneralErrorCode.REVIEW_NOT_FOUND);
+        }
+
+        // 작성자인지 확인
+        if (!review.getUser().getId().equals(userId)) {
+            throw new GeneralException(GeneralErrorCode.REVIEW_NOT_WRITER);
+        }
+
+        // 삭제할 이미지 url 미리 추출
+        List<String> imageUrls = review.getImages().stream()
+                .map(ReviewImage::getImageUrl)
+                .toList();
+
+        // 후기 삭제
+        reviewRepository.deleteById(reviewId);
+
+        // S3에서 이미지 삭제
+        imageUrls.forEach(s3Service::delete);
+
+        return ReviewResponseDTO.DeleteReviewResponseDTO.builder()
+                .id(reviewId)
+                .build();
+    }
+
     private void validateImageFile(MultipartFile file) {
         if (file.isEmpty()) {
             throw new GeneralException(GeneralErrorCode.INVALID_FILE);

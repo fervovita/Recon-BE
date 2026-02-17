@@ -41,6 +41,7 @@ public enum GeneralErrorCode implements BaseErrorCode {
 
     // 리뷰 에러
     REVIEW_SELLER_NOT_ALLOWED(HttpStatus.FORBIDDEN, "REVIEW_4031", "판매자는 후기를 남길 수 없습니다."),
+    REVIEW_NOT_WRITER(HttpStatus.FORBIDDEN, "REVIEW_4032", "후기 작성자가 아닙니다."),
     DUPLICATE_REVIEW(HttpStatus.BAD_REQUEST, "REVIEW_4001", "이미 후기를 작성한 상품입니다."),
     REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND, "REVIEW_4041", "존재하지 않는 후기입니다."),
 
