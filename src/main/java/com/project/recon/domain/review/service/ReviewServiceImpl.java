@@ -91,6 +91,10 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Override
     public Page<ReviewResponseDTO.ReviewListResponseDTO> getReviews(Long productId, Pageable pageable) {
+        if (!productRepository.existsById(productId)) {
+            throw new GeneralException(GeneralErrorCode.PRODUCT_NOT_FOUND);
+        }
+
         return reviewRepository.findByProductId(productId, pageable)
                 .map(this::toListDTO);
     }
