@@ -44,7 +44,18 @@ public class ReviewController {
         return ApiResponse.onSuccess("후기 삭제 성공", response);
     }
 
-    @Operation(summary = "후기 수정")
+    @Operation(summary = "후기 수정", description = """
+            **이미지 수정 방법:**
+            - remainingImageUrls: 유지할 기존 이미지 URL 목록
+            - images: 새로 추가할 이미지 파일
+            - remainingImageUrls에 포함되지 않은 기존 이미지는 자동 삭제됩니다.
+            - 새 이미지는 기존 이미지 뒤에 추가됩니다.
+            
+            **예시:**
+            - remainingImageUrls: ["https://s3.../url1", "https://s3.../url3"]
+            - images: [새파일.jpg]
+            - 결과: url1 → url3 → 새파일
+            """)
     @PatchMapping(value = "/{reviewId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ApiResponse<ReviewResponseDTO.UpdateReviewResponseDTO> updateReview(
             @AuthenticationPrincipal Long userId,
