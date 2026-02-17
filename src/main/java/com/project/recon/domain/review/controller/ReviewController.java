@@ -43,4 +43,16 @@ public class ReviewController {
         ReviewResponseDTO.DeleteReviewResponseDTO response = reviewService.deleteReview(userId, productId, reviewId);
         return ApiResponse.onSuccess("후기 삭제 성공", response);
     }
+
+    @Operation(summary = "후기 수정")
+    @PatchMapping(value = "/{reviewId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ApiResponse<ReviewResponseDTO.UpdateReviewResponseDTO> updateReview(
+            @AuthenticationPrincipal Long userId,
+            @PathVariable Long productId,
+            @PathVariable Long reviewId,
+            @Valid @RequestPart(value = "reviewData", required = false) ReviewRequestDTO.UpdateReviewRequestDTO request,
+            @RequestPart(value = "images", required = false) List<MultipartFile> images) {
+        ReviewResponseDTO.UpdateReviewResponseDTO response = reviewService.updateReview(userId, productId, reviewId, request, images);
+        return ApiResponse.onSuccess("후기 수정 성공", response);
+    }
 }

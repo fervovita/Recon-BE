@@ -49,6 +49,11 @@ public class Review extends BaseEntity {
                 .build();
     }
 
+    public void updateReview(String content, Integer rating) {
+        if (content != null) this.content = content;
+        if (rating != null) this.rating = rating;
+    }
+
     public void addImage(ReviewImage image) {
         images.add(image);
         image.assignReview(this);

@@ -3,6 +3,8 @@ package com.project.recon.domain.review.dto;
 import jakarta.validation.constraints.*;
 import lombok.Getter;
 
+import java.util.List;
+
 public class ReviewRequestDTO {
 
     @Getter
@@ -16,5 +18,18 @@ public class ReviewRequestDTO {
         @Min(value = 1, message = "별점은 1 이상이어야 합니다.")
         @Max(value = 5, message = "별점은 5 이하여야 합니다.")
         private Integer rating;
+    }
+
+    @Getter
+    public static class UpdateReviewRequestDTO {
+
+        @Size(max = 1000, message = "후기 내용은 1,000자 이내로 입력해주세요.")
+        private String content;
+
+        @Min(value = 1, message = "별점은 1 이상이어야 합니다.")
+        @Max(value = 5, message = "별점은 5 이하여야 합니다.")
+        private Integer rating;
+
+        private List<String> remainingImageUrls;
     }
 }

@@ -121,6 +121,82 @@ public class ReviewServiceImpl implements ReviewService {
                 .build();
     }
 
+    @Override
+    @Transactional
+    public ReviewResponseDTO.UpdateReviewResponseDTO updateReview(Long userId, Long productId, Long reviewId, ReviewRequestDTO.UpdateReviewRequestDTO request, List<MultipartFile> newImages) {
+
+        // 후기 조회
+        Review review = reviewRepository.findById(reviewId)
+                .orElseThrow(() -> new GeneralException(GeneralErrorCode.REVIEW_NOT_FOUND));
+
+        // 해당 상품의 후기인지 확인
+        if (!review.getProduct().getId().equals(productId)) {
+            throw new GeneralException(GeneralErrorCode.REVIEW_NOT_FOUND);
+        }
+
+        // 작성자인지 확인
+        if (!review.getUser().getId().equals(userId)) {
+            throw new GeneralException(GeneralErrorCode.REVIEW_NOT_WRITER);
+        }
+
+        // 후기 내용 수정
+        if (request != null) {
+            review.updateReview(request.getContent(), request.getRating());
+        }
+
+        // 이미지 교체
+        replaceImage(review, request, newImages);
+
+        return ReviewResponseDTO.UpdateReviewResponseDTO.builder()
+                .id(review.getId())
+                .content(review.getContent())
+                .rating(review.getRating())
+                .imageUrls(review.getImages().stream().map(ReviewImage::getImageUrl).toList())
+                .build();
+    }
+
+    private void replaceImage(Review review, ReviewRequestDTO.UpdateReviewRequestDTO request, List<MultipartFile> newImages) {
+
+        List<String> remainingImageUrls = (request != null) ? request.getRemainingImageUrls() : null;
+        boolean hasRemainingUrls = remainingImageUrls != null;
+        boolean hasNewImages = newImages != null && !newImages.isEmpty();
+
+        if (hasRemainingUrls || hasNewImages) {
+            if (hasNewImages) {
+                newImages.forEach(this::validateImageFile);
+            }
+
+            // 기존 이미지 url 미리 추출
+            List<String> oldImageUrls = review.getImages().stream()
+                    .map(ReviewImage::getImageUrl)
+                    .toList();
+
+            // 새 파일 업로드
+            List<String> uploadedUrls = hasNewImages
+                    ? s3Service.uploadFiles(newImages, "review-image")
+                    : List.of();
+
+            // 유지할 url 검증
+            List<String> keepUrls = hasRemainingUrls ? remainingImageUrls : List.of();
+            for (String url : keepUrls) {
+                if (!oldImageUrls.contains(url)) {
+                    uploadedUrls.forEach(s3Service::delete);
+                    throw new GeneralException(GeneralErrorCode.INVALID_FILE);
+                }
+            }
+
+            // 이미지 교체
+            review.getImages().clear();
+            keepUrls.forEach(url -> review.addImage(ReviewImage.builder().imageUrl(url).build()));
+            uploadedUrls.forEach(url -> review.addImage(ReviewImage.builder().imageUrl(url).build()));
+
+            // S3에서 불필요한 이미지 삭제
+            oldImageUrls.stream()
+                    .filter(url -> !keepUrls.contains(url))
+                    .forEach(s3Service::delete);
+        }
+    }
+
     private void validateImageFile(MultipartFile file) {
         if (file.isEmpty()) {
             throw new GeneralException(GeneralErrorCode.INVALID_FILE);
