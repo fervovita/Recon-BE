@@ -4,10 +4,16 @@ import com.project.recon.domain.review.dto.ReviewRequestDTO;
 import com.project.recon.domain.review.dto.ReviewResponseDTO;
 import com.project.recon.domain.review.service.ReviewService;
 import com.project.recon.global.apiPayload.response.ApiResponse;
+import com.project.recon.global.apiPayload.response.PageResponseDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -32,6 +38,15 @@ public class ReviewController {
             @RequestPart(value = "images", required = false) List<MultipartFile> images) {
         ReviewResponseDTO.CreateReviewResponseDTO response = reviewService.createReview(userId, productId, request, images);
         return ApiResponse.onSuccess("후기 등록 성공", response);
+    }
+
+    @Operation(summary = "후기 목록 조회")
+    @GetMapping
+    public ApiResponse<PageResponseDTO<ReviewResponseDTO.ReviewListResponseDTO>> getReviews(
+            @PathVariable Long productId,
+            @ParameterObject @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+        Page<ReviewResponseDTO.ReviewListResponseDTO> response = reviewService.getReviews(productId, pageable);
+        return ApiResponse.onSuccess("후기 목록 조회 성공", PageResponseDTO.of(response));
     }
 
     @Operation(summary = "후기 삭제")

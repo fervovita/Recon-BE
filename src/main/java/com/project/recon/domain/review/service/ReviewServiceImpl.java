@@ -14,6 +14,8 @@ import com.project.recon.global.apiPayload.exception.GeneralException;
 import com.project.recon.global.s3.S3Service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -88,6 +90,12 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
+    public Page<ReviewResponseDTO.ReviewListResponseDTO> getReviews(Long productId, Pageable pageable) {
+        return reviewRepository.findByProductId(productId, pageable)
+                .map(this::toListDTO);
+    }
+
+    @Override
     @Transactional
     public ReviewResponseDTO.DeleteReviewResponseDTO deleteReview(Long userId, Long productId, Long reviewId) {
 
@@ -152,6 +160,22 @@ public class ReviewServiceImpl implements ReviewService {
                 .content(review.getContent())
                 .rating(review.getRating())
                 .imageUrls(review.getImages().stream().map(ReviewImage::getImageUrl).toList())
+                .build();
+    }
+
+    private ReviewResponseDTO.ReviewListResponseDTO toListDTO(Review review) {
+
+        List<String> imageUrls = review.getImages().stream()
+                .map(ReviewImage::getImageUrl)
+                .toList();
+
+        return ReviewResponseDTO.ReviewListResponseDTO.builder()
+                .id(review.getId())
+                .content(review.getContent())
+                .rating(review.getRating())
+                .imageUrls(imageUrls)
+                .writer(ReviewResponseDTO.WriterInfo.from(review.getUser()))
+                .createdAt(review.getCreatedAt())
                 .build();
     }
 
