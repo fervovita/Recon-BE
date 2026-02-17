@@ -24,7 +24,7 @@ public class PageResponseDTO<T> {
     public static <T> PageResponseDTO<T> of(Page<T> page) {
         return PageResponseDTO.<T>builder()
                 .content(page.getContent())
-                .page(page.getNumber())
+                .page(page.getNumber() + 1)
                 .size(page.getSize())
                 .totalElements(page.getTotalElements())
                 .totalPages(page.getTotalPages())

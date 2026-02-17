@@ -26,6 +26,10 @@ spring:
       host: ${SPRING_DATA_REDIS_HOST}
       port: ${SPRING_DATA_REDIS_PORT}
 
+    web:
+      pageable:
+        one-indexed-parameters: true
+
   servlet:
     multipart:
       max-file-size: 10MB
