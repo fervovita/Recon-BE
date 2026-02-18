@@ -79,6 +79,10 @@ public class ProductServiceImpl implements ProductService {
                 .map(Product::getId)
                 .toList();
 
+        if (productIds.isEmpty()) {
+            return products.map(product -> toListDTO(product, Map.of(), Set.of()));
+        }
+
         // 상품별 좋아요 수 조회
         Map<Long, Long> likeCountMap = productLikeRepository.countByProductIds(productIds).stream()
                 .collect(Collectors.toMap(
