@@ -86,4 +86,13 @@ public class ProductController {
         ProductResponseDTO.UpdateProductResponseDTO response = productService.updateProduct(userId, productId, request, images);
         return ApiResponse.onSuccess("상품 수정 성공", response);
     }
+
+    @Operation(summary = "상품 좋아요 토글")
+    @PostMapping("/{productId}/like")
+    public ApiResponse<ProductResponseDTO.ProductLikeResponseDTO> toggleLike(
+            @AuthenticationPrincipal Long userId,
+            @PathVariable Long productId) {
+        ProductResponseDTO.ProductLikeResponseDTO response = productService.toggleLike(userId, productId);
+        return ApiResponse.onSuccess("좋아요 처리 성공", response);
+    }
 }

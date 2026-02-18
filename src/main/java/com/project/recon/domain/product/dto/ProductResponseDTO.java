@@ -101,4 +101,14 @@ public class ProductResponseDTO {
 
         private LocalDateTime createdAt;
     }
+
+    @Getter
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @Builder
+    public static class ProductLikeResponseDTO {
+        private Long productId;
+        private boolean liked;
+        private long likeCount;
+    }
 }

@@ -5,6 +5,8 @@ import com.project.recon.domain.product.dto.ProductResponseDTO;
 import com.project.recon.domain.product.entity.CategoryType;
 import com.project.recon.domain.product.entity.Product;
 import com.project.recon.domain.product.entity.ProductImage;
+import com.project.recon.domain.product.entity.ProductLike;
+import com.project.recon.domain.product.repository.ProductLikeRepository;
 import com.project.recon.domain.product.repository.ProductRepository;
 import com.project.recon.domain.user.entity.User;
 import com.project.recon.domain.user.repository.UserRepository;
@@ -21,6 +23,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 @Service
@@ -32,6 +35,7 @@ public class ProductServiceImpl implements ProductService {
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
     private final S3Service s3Service;
+    private final ProductLikeRepository productLikeRepository;
 
     @Override
     public ProductResponseDTO.ProductDetailResponseDTO getProduct(Long productId) {
@@ -191,6 +195,40 @@ public class ProductServiceImpl implements ProductService {
                 .seller(ProductResponseDTO.SellerInfo.from(product.getSeller()))
                 .imageUrls(product.getImages().stream().map(ProductImage::getImageUrl).toList())
                 .createdAt(product.getCreatedAt())
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public ProductResponseDTO.ProductLikeResponseDTO toggleLike(Long userId, Long productId) {
+
+        // 상품 조회
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new GeneralException(GeneralErrorCode.PRODUCT_NOT_FOUND));
+
+        // 좋아요 여부 조회
+        Optional<ProductLike> existingLike = productLikeRepository.findByProductIdAndUserId(productId, userId);
+
+        boolean liked;
+        if (existingLike.isPresent()) {
+            // 좋아요 취소
+            productLikeRepository.delete(existingLike.get());
+            liked = false;
+        } else {
+            // 좋아요 등록
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new GeneralException(GeneralErrorCode.MEMBER_NOT_FOUND));
+            productLikeRepository.save(ProductLike.createProductLike(product, user));
+            liked = true;
+        }
+
+        // 상품의 좋아요 개수 조회
+        long likeCount = productLikeRepository.countByProductId(productId);
+
+        return ProductResponseDTO.ProductLikeResponseDTO.builder()
+                .productId(productId)
+                .liked(liked)
+                .likeCount(likeCount)
                 .build();
     }
 

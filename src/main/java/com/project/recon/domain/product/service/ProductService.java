@@ -20,4 +20,6 @@ public interface ProductService {
     ProductResponseDTO.DeleteProductResponseDTO deleteProduct(Long userId, Long productId);
 
     ProductResponseDTO.UpdateProductResponseDTO updateProduct(Long userId, Long productId, ProductRequestDTO.UpdateProductRequestDTO request, List<MultipartFile> newImages);
+
+    ProductResponseDTO.ProductLikeResponseDTO toggleLike(Long userId, Long productId);
 }
