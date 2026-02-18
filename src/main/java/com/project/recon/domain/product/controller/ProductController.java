@@ -31,18 +31,21 @@ public class ProductController {
 
     @Operation(summary = "상품 조회")
     @GetMapping("/{productId}")
-    public ApiResponse<ProductResponseDTO.ProductDetailResponseDTO> getProduct(@PathVariable Long productId) {
-        ProductResponseDTO.ProductDetailResponseDTO response = productService.getProduct(productId);
+    public ApiResponse<ProductResponseDTO.ProductDetailResponseDTO> getProduct(
+            @AuthenticationPrincipal Long userId,
+            @PathVariable Long productId) {
+        ProductResponseDTO.ProductDetailResponseDTO response = productService.getProduct(userId, productId);
         return ApiResponse.onSuccess("상품 조회 성공", response);
     }
 
     @Operation(summary = "상품 목록 조회")
     @GetMapping
     public ApiResponse<SliceResponseDTO<ProductResponseDTO.ProductListResponseDTO>> getProducts(
+            @AuthenticationPrincipal Long userId,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) CategoryType category,
             @ParameterObject @PageableDefault(size = 20) Pageable pageable) {
-        Slice<ProductResponseDTO.ProductListResponseDTO> response = productService.getProducts(keyword, category, pageable);
+        Slice<ProductResponseDTO.ProductListResponseDTO> response = productService.getProducts(userId, keyword, category, pageable);
         return ApiResponse.onSuccess("상품 목록 조회 성공", SliceResponseDTO.of(response));
     }
 
@@ -85,5 +88,14 @@ public class ProductController {
             @RequestPart(value = "images", required = false) List<MultipartFile> images) {
         ProductResponseDTO.UpdateProductResponseDTO response = productService.updateProduct(userId, productId, request, images);
         return ApiResponse.onSuccess("상품 수정 성공", response);
+    }
+
+    @Operation(summary = "상품 좋아요 토글")
+    @PostMapping("/{productId}/like")
+    public ApiResponse<ProductResponseDTO.ProductLikeResponseDTO> toggleLike(
+            @AuthenticationPrincipal Long userId,
+            @PathVariable Long productId) {
+        ProductResponseDTO.ProductLikeResponseDTO response = productService.toggleLike(userId, productId);
+        return ApiResponse.onSuccess("좋아요 처리 성공", response);
     }
 }

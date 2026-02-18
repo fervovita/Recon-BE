@@ -11,13 +11,15 @@ import java.util.List;
 
 public interface ProductService {
 
-    ProductResponseDTO.ProductDetailResponseDTO getProduct(Long productId);
+    ProductResponseDTO.ProductDetailResponseDTO getProduct(Long userId, Long productId);
 
-    Slice<ProductResponseDTO.ProductListResponseDTO> getProducts(String keyword, CategoryType category, Pageable pageable);
+    Slice<ProductResponseDTO.ProductListResponseDTO> getProducts(Long userId, String keyword, CategoryType category, Pageable pageable);
 
     ProductResponseDTO.CreateProductResponseDTO createProduct(Long userId, ProductRequestDTO.CreateProductRequestDTO request, List<MultipartFile> images);
 
     ProductResponseDTO.DeleteProductResponseDTO deleteProduct(Long userId, Long productId);
 
     ProductResponseDTO.UpdateProductResponseDTO updateProduct(Long userId, Long productId, ProductRequestDTO.UpdateProductRequestDTO request, List<MultipartFile> newImages);
+
+    ProductResponseDTO.ProductLikeResponseDTO toggleLike(Long userId, Long productId);
 }

@@ -5,6 +5,7 @@ import com.project.recon.global.apiPayload.code.GeneralErrorCode;
 import com.project.recon.global.apiPayload.exception.GeneralException;
 import com.project.recon.global.apiPayload.response.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.mapping.PropertyReferenceException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -73,6 +74,17 @@ public class ExceptionAdvice {
         BaseErrorCode code = GeneralErrorCode.INVALID_PARAMETER;
 
         log.warn("PropertyReferenceException: {}", e.getMessage());
+
+        return ResponseEntity
+                .status(code.getHttpStatus())
+                .body(ApiResponse.onFailure(code, code.getMessage()));
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ApiResponse<Object>> handleDataIntegrityViolationException(DataIntegrityViolationException e) {
+        BaseErrorCode code = GeneralErrorCode.DUPLICATE_RESOURCE;
+
+        log.warn("DataIntegrityViolationException: {}", e.getMessage());
 
         return ResponseEntity
                 .status(code.getHttpStatus())

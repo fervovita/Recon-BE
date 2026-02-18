@@ -19,19 +19,14 @@ public class ProductResponseDTO {
     @Builder
     public static class ProductDetailResponseDTO {
         private Long id;
-
         private String name;
-
         private String description;
-
         private List<String> imageUrls;
-
         private Long price;
-
         private SellerInfo seller;
-
         private CategoryType category;
-
+        private long likeCount;
+        private boolean liked;
         private LocalDateTime createdAt;
     }
 
@@ -61,6 +56,8 @@ public class ProductResponseDTO {
         private Long price;
         private CategoryType category;
         private String thumbnail;
+        private long likeCount;
+        private boolean liked;
         private LocalDateTime createdAt;
     }
 
@@ -100,5 +97,15 @@ public class ProductResponseDTO {
         private CategoryType category;
 
         private LocalDateTime createdAt;
+    }
+
+    @Getter
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @Builder
+    public static class ProductLikeResponseDTO {
+        private Long productId;
+        private boolean liked;
+        private long likeCount;
     }
 }

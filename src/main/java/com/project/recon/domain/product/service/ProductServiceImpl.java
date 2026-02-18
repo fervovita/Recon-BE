@@ -5,6 +5,8 @@ import com.project.recon.domain.product.dto.ProductResponseDTO;
 import com.project.recon.domain.product.entity.CategoryType;
 import com.project.recon.domain.product.entity.Product;
 import com.project.recon.domain.product.entity.ProductImage;
+import com.project.recon.domain.product.entity.ProductLike;
+import com.project.recon.domain.product.repository.ProductLikeRepository;
 import com.project.recon.domain.product.repository.ProductRepository;
 import com.project.recon.domain.user.entity.User;
 import com.project.recon.domain.user.repository.UserRepository;
@@ -19,9 +21,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -32,9 +33,10 @@ public class ProductServiceImpl implements ProductService {
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
     private final S3Service s3Service;
+    private final ProductLikeRepository productLikeRepository;
 
     @Override
-    public ProductResponseDTO.ProductDetailResponseDTO getProduct(Long productId) {
+    public ProductResponseDTO.ProductDetailResponseDTO getProduct(Long userId, Long productId) {
 
         // 상품 정보 조회
         Product product = productRepository.findById(productId)
@@ -46,6 +48,12 @@ public class ProductServiceImpl implements ProductService {
                 .map(ProductImage::getImageUrl)
                 .toList();
 
+        // 좋아요 수
+        long likeCount = productLikeRepository.countByProductId(productId);
+
+        // 좋아요 여부
+        boolean liked = (userId != null) && productLikeRepository.existsByProductIdAndUserId(productId, userId);
+
         return ProductResponseDTO.ProductDetailResponseDTO.builder()
                 .id(product.getId())
                 .name(product.getProductName())
@@ -54,33 +62,43 @@ public class ProductServiceImpl implements ProductService {
                 .category(product.getCategory())
                 .seller(ProductResponseDTO.SellerInfo.from(product.getSeller()))
                 .imageUrls(imageUrls)
+                .likeCount(likeCount)
+                .liked(liked)
                 .createdAt(product.getCreatedAt())
                 .build();
     }
 
     @Override
-    public Slice<ProductResponseDTO.ProductListResponseDTO> getProducts(String keyword, CategoryType category, Pageable pageable) {
-        return productRepository.searchProducts(keyword, category, pageable)
-                .map(this::toListDTO);
-    }
+    public Slice<ProductResponseDTO.ProductListResponseDTO> getProducts(Long userId, String keyword, CategoryType category, Pageable pageable) {
 
-    private ProductResponseDTO.ProductListResponseDTO toListDTO(Product product) {
+        // 상품 목록 조회
+        Slice<Product> products = productRepository.searchProducts(keyword, category, pageable);
 
-        // thumbnail 조회 (imageOrder가 0이 thumbnail)
-        String thumbnail = product.getImages().stream()
-                .filter(img -> img.getImageOrder() == 0)
-                .map(ProductImage::getImageUrl)
-                .findFirst()
-                .orElse(null);
+        // 조회된 상품의 id 추출
+        List<Long> productIds = products.getContent().stream()
+                .map(Product::getId)
+                .toList();
 
-        return ProductResponseDTO.ProductListResponseDTO.builder()
-                .id(product.getId())
-                .name(product.getProductName())
-                .price(product.getPrice())
-                .category(product.getCategory())
-                .thumbnail(thumbnail)
-                .createdAt(product.getCreatedAt())
-                .build();
+        if (productIds.isEmpty()) {
+            return products.map(product -> toListDTO(product, Map.of(), Set.of()));
+        }
+
+        // 상품별 좋아요 수 조회
+        Map<Long, Long> likeCountMap = productLikeRepository.countByProductIds(productIds).stream()
+                .collect(Collectors.toMap(
+                        row -> (Long) row[0],   // productId
+                        row -> (Long) row[1]    // likeCount
+                ));
+
+        // 상품별 좋아요 여부 조회
+        Set<Long> likedProductIds = (userId != null)
+                ? new HashSet<>(productLikeRepository.findLikeProductsIds(productIds, userId))      // likedProductIds.contains를 할 때 Set은 O(1)이기 때문에 Set 사용
+                : Set.of();
+
+        return products.map(
+                product -> toListDTO(product, likeCountMap, likedProductIds)
+        );
+
     }
 
     @Override
@@ -190,6 +208,62 @@ public class ProductServiceImpl implements ProductService {
                 .description(product.getDescription())
                 .seller(ProductResponseDTO.SellerInfo.from(product.getSeller()))
                 .imageUrls(product.getImages().stream().map(ProductImage::getImageUrl).toList())
+                .createdAt(product.getCreatedAt())
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public ProductResponseDTO.ProductLikeResponseDTO toggleLike(Long userId, Long productId) {
+
+        // 상품 조회
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new GeneralException(GeneralErrorCode.PRODUCT_NOT_FOUND));
+
+        // 좋아요 여부 조회
+        Optional<ProductLike> existingLike = productLikeRepository.findByProductIdAndUserId(productId, userId);
+
+        boolean liked;
+        if (existingLike.isPresent()) {
+            // 좋아요 취소
+            productLikeRepository.delete(existingLike.get());
+            liked = false;
+        } else {
+            // 좋아요 등록
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new GeneralException(GeneralErrorCode.MEMBER_NOT_FOUND));
+            productLikeRepository.save(ProductLike.createProductLike(product, user));
+            liked = true;
+        }
+
+        // 상품의 좋아요 개수 조회
+        long likeCount = productLikeRepository.countByProductId(productId);
+
+        return ProductResponseDTO.ProductLikeResponseDTO.builder()
+                .productId(productId)
+                .liked(liked)
+                .likeCount(likeCount)
+                .build();
+    }
+
+    private ProductResponseDTO.ProductListResponseDTO toListDTO(Product product, Map<Long, Long> likeCountMap, Set<Long> likedProductIds) {
+
+        // thumbnail 조회 (imageOrder가 0이 thumbnail)
+        String thumbnail = product.getImages().stream()
+                .filter(img -> img.getImageOrder() == 0)
+                .map(ProductImage::getImageUrl)
+                .findFirst()
+                .orElse(null);
+
+
+        return ProductResponseDTO.ProductListResponseDTO.builder()
+                .id(product.getId())
+                .name(product.getProductName())
+                .price(product.getPrice())
+                .category(product.getCategory())
+                .thumbnail(thumbnail)
+                .likeCount(likeCountMap.getOrDefault(product.getId(), 0L))
+                .liked(likedProductIds.contains(product.getId()))
                 .createdAt(product.getCreatedAt())
                 .build();
     }
