@@ -21,10 +21,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -72,35 +70,31 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public Slice<ProductResponseDTO.ProductListResponseDTO> getProducts(Long userId, String keyword, CategoryType category, Pageable pageable) {
-        return productRepository.searchProducts(keyword, category, pageable)
-                .map(product -> toListDTO(userId, product));
-    }
 
-    private ProductResponseDTO.ProductListResponseDTO toListDTO(Long userId, Product product) {
+        // 상품 목록 조회
+        Slice<Product> products = productRepository.searchProducts(keyword, category, pageable);
 
-        // thumbnail 조회 (imageOrder가 0이 thumbnail)
-        String thumbnail = product.getImages().stream()
-                .filter(img -> img.getImageOrder() == 0)
-                .map(ProductImage::getImageUrl)
-                .findFirst()
-                .orElse(null);
+        // 조회된 상품의 id 추출
+        List<Long> productIds = products.getContent().stream()
+                .map(Product::getId)
+                .toList();
 
-        // 좋아요 수
-        long likeCount = productLikeRepository.countByProductId(product.getId());
+        // 상품별 좋아요 수 조회
+        Map<Long, Long> likeCountMap = productLikeRepository.countByProductIds(productIds).stream()
+                .collect(Collectors.toMap(
+                        row -> (Long) row[0],   // productId
+                        row -> (Long) row[1]    // likeCount
+                ));
 
-        // 좋아요 여부
-        boolean liked = (userId != null) && productLikeRepository.existsByProductIdAndUserId(product.getId(), userId);
+        // 상품별 좋아요 여부 조회
+        Set<Long> likedProductIds = (userId != null)
+                ? new HashSet<>(productLikeRepository.findLikeProductsIds(productIds, userId))      // likedProductIds.contains를 할 때 Set은 O(1)이기 때문에 Set 사용
+                : Set.of();
 
-        return ProductResponseDTO.ProductListResponseDTO.builder()
-                .id(product.getId())
-                .name(product.getProductName())
-                .price(product.getPrice())
-                .category(product.getCategory())
-                .thumbnail(thumbnail)
-                .likeCount(likeCount)
-                .liked(liked)
-                .createdAt(product.getCreatedAt())
-                .build();
+        return products.map(
+                product -> toListDTO(product, likeCountMap, likedProductIds)
+        );
+
     }
 
     @Override
@@ -245,6 +239,28 @@ public class ProductServiceImpl implements ProductService {
                 .productId(productId)
                 .liked(liked)
                 .likeCount(likeCount)
+                .build();
+    }
+
+    private ProductResponseDTO.ProductListResponseDTO toListDTO(Product product, Map<Long, Long> likeCountMap, Set<Long> likedProductIds) {
+
+        // thumbnail 조회 (imageOrder가 0이 thumbnail)
+        String thumbnail = product.getImages().stream()
+                .filter(img -> img.getImageOrder() == 0)
+                .map(ProductImage::getImageUrl)
+                .findFirst()
+                .orElse(null);
+
+
+        return ProductResponseDTO.ProductListResponseDTO.builder()
+                .id(product.getId())
+                .name(product.getProductName())
+                .price(product.getPrice())
+                .category(product.getCategory())
+                .thumbnail(thumbnail)
+                .likeCount(likeCountMap.getOrDefault(product.getId(), 0L))
+                .liked(likedProductIds.contains(product.getId()))
+                .createdAt(product.getCreatedAt())
                 .build();
     }
 
