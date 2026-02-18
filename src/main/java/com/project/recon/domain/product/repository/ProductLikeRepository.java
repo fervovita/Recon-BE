@@ -10,4 +10,6 @@ public interface ProductLikeRepository extends JpaRepository<ProductLike, Long> 
     Optional<ProductLike> findByProductIdAndUserId(Long productId, Long userId);
 
     long countByProductId(Long productId);
+
+    boolean existsByProductIdAndUserId(Long productId, Long userId);
 }
