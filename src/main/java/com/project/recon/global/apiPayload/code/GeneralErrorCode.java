@@ -26,6 +26,7 @@ public enum GeneralErrorCode implements BaseErrorCode {
     EMAIL_CODE_EXPIRED(HttpStatus.BAD_REQUEST, "EMAIL_4001", "인증 코드가 만료되었습니다."),
     EMAIL_CODE_INVALID(HttpStatus.BAD_REQUEST, "EMAIL_4002", "인증 코드가 올바르지 않습니다."),
     EMAIL_NOT_VERIFIED(HttpStatus.BAD_REQUEST, "EMAIL_4003", "이메일 인증이 완료되지 않았습니다."),
+    EMAIL_CODE_ALREADY_SENT(HttpStatus.TOO_MANY_REQUESTS, "EMAIL_4291", "이미 인증 코드가 발송되었습니다. 잠시 후 다시 시도해주세요."),
     EMAIL_SEND_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "EMAIL_5001", "이메일 발송에 실패했습니다."),
 
     // 카카오 에러

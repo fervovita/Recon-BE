@@ -17,14 +17,22 @@ public class EmailService {
 
     private static final String CODE_PREFIX = "EMAIL_CODE:";
     private static final String VERIFIED_PREFIX = "EMAIL_VERIFIED:";
+    private static final String RESEND_PREFIX = "EMAIL_RESEND:";
     private static final long CODE_EXPIRATION = 5;          // 인증 코드 유효시간 5분
     private static final long VERIFIED_EXPIRATION = 30;     // 인증 완료 유효시간 30분
+    private static final long RESEND_LIMIT = 1;             // 코드 재발송 제한시간 1분
 
 
     private final RedisTemplate<String, Object> redisTemplate;
     private final EmailSender emailSender;
 
     public void sendVerificationCode(String email) {
+        String resendKey = RESEND_PREFIX + email;
+
+        if (redisTemplate.hasKey(resendKey)) {
+            throw new GeneralException(GeneralErrorCode.EMAIL_CODE_ALREADY_SENT);
+        }
+
         String code = generateCode();
 
         // Redis에 인증 코드 저장 (TTL: 5분)
@@ -32,6 +40,14 @@ public class EmailService {
                 CODE_PREFIX + email,
                 code,
                 CODE_EXPIRATION,
+                TimeUnit.MINUTES
+        );
+
+        // Redis에 코드 재발송 제한 저장 (TTL: 1분)
+        redisTemplate.opsForValue().set(
+                resendKey,
+                "true",
+                RESEND_LIMIT,
                 TimeUnit.MINUTES
         );
 
