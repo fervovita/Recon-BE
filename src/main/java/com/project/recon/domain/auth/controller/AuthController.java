@@ -55,4 +55,18 @@ public class AuthController {
         AuthResponseDTO.SignupResponseDTO response = authService.signup(request);
         return ApiResponse.onSuccess("회원가입 성공", response);
     }
+
+    @Operation(summary = "이메일 인증 코드 발송")
+    @PostMapping("/email/send")
+    public ApiResponse<Void> sendEmailCode(@Valid @RequestBody AuthRequestDTO.EmailSendRequestDTO request) {
+        authService.sendEmailCode(request);
+        return ApiResponse.onSuccess("인증 코드가 발송되었습니다.");
+    }
+
+    @Operation(summary = "이메일 인증 코드 검증")
+    @PostMapping("/email/verify")
+    public ApiResponse<Void> verifyEmailCode(@Valid @RequestBody AuthRequestDTO.EmailVerifyRequestDTO request) {
+        authService.verifyEmailCode(request);
+        return ApiResponse.onSuccess("이메일 인증 성공");
+    }
 }

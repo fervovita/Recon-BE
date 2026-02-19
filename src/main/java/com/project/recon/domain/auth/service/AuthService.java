@@ -14,4 +14,8 @@ public interface AuthService {
     void logout(AuthRequestDTO.LogoutRequestDTO request);
 
     AuthResponseDTO.SignupResponseDTO signup(AuthRequestDTO.SignupRequestDTO request);
+
+    void sendEmailCode(AuthRequestDTO.EmailSendRequestDTO request);
+
+    void verifyEmailCode(AuthRequestDTO.EmailVerifyRequestDTO request);
 }

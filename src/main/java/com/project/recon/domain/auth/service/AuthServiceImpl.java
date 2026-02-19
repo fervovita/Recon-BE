@@ -9,6 +9,7 @@ import com.project.recon.domain.user.entity.User;
 import com.project.recon.domain.user.repository.UserRepository;
 import com.project.recon.global.apiPayload.code.GeneralErrorCode;
 import com.project.recon.global.apiPayload.exception.GeneralException;
+import com.project.recon.global.email.EmailService;
 import com.project.recon.global.jwt.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +31,7 @@ public class AuthServiceImpl implements AuthService {
     private final JwtTokenProvider jwtTokenProvider;
     private final RefreshTokenService refreshTokenService;
     private final PasswordEncoder passwordEncoder;
+    private final EmailService emailService;
 
     @Override
     @Transactional
@@ -194,6 +196,11 @@ public class AuthServiceImpl implements AuthService {
             throw new GeneralException(GeneralErrorCode.DUPLICATE_PHONE);
         }
 
+        // 이메일 인증 여부 검증
+        if (!emailService.isVerified(request.getEmail())) {
+            throw new GeneralException(GeneralErrorCode.EMAIL_NOT_VERIFIED);
+        }
+
 
         User user = User.createEmailUser(
                 request.getNickName(),
@@ -213,9 +220,26 @@ public class AuthServiceImpl implements AuthService {
         // refreshToken을 Redis에 저장
         refreshTokenService.saveRefreshToken(user.getId(), refreshToken);
 
+        // 인증 코드 삭제
+        emailService.deleteVerified(request.getEmail());
+
         return AuthResponseDTO.SignupResponseDTO.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .build();
+    }
+
+    @Override
+    public void sendEmailCode(AuthRequestDTO.EmailSendRequestDTO request) {
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new GeneralException(GeneralErrorCode.DUPLICATE_EMAIL);
+        }
+
+        emailService.sendVerificationCode(request.getEmail());
+    }
+
+    @Override
+    public void verifyEmailCode(AuthRequestDTO.EmailVerifyRequestDTO request) {
+        emailService.verifyCode(request.getEmail(), request.getCode());
     }
 }

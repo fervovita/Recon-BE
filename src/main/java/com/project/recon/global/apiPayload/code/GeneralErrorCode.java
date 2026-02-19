@@ -22,6 +22,13 @@ public enum GeneralErrorCode implements BaseErrorCode {
     UNDER_AGE(HttpStatus.BAD_REQUEST, "SIGNUP_4003", "만 14세 미만은 가입할 수 없습니다."),
     DUPLICATE_PHONE(HttpStatus.BAD_REQUEST, "SIGNUP_4004", "이미 사용중인 전화번호입니다."),
 
+    // 이메일 인증 에러
+    EMAIL_CODE_EXPIRED(HttpStatus.BAD_REQUEST, "EMAIL_4001", "인증 코드가 만료되었습니다."),
+    EMAIL_CODE_INVALID(HttpStatus.BAD_REQUEST, "EMAIL_4002", "인증 코드가 올바르지 않습니다."),
+    EMAIL_NOT_VERIFIED(HttpStatus.BAD_REQUEST, "EMAIL_4003", "이메일 인증이 완료되지 않았습니다."),
+    EMAIL_CODE_ALREADY_SENT(HttpStatus.TOO_MANY_REQUESTS, "EMAIL_4291", "이미 인증 코드가 발송되었습니다. 잠시 후 다시 시도해주세요."),
+    EMAIL_SEND_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "EMAIL_5001", "이메일 발송에 실패했습니다."),
+
     // 카카오 에러
     KAKAO_INVALID_CODE(HttpStatus.UNAUTHORIZED, "KAKAO_4011", "유효하지 않은 카카오 인가 코드입니다."),
     KAKAO_USER_INFO_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "KAKAO_5001", "카카오 사용자 정보 조회에 실패했습니다."),
