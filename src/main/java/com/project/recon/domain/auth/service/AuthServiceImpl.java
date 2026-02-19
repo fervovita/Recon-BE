@@ -181,11 +181,6 @@ public class AuthServiceImpl implements AuthService {
             throw new GeneralException(GeneralErrorCode.UNDER_AGE);
         }
 
-        // 이메일 인증 여부 검증
-        if (!emailService.isVerified(request.getEmail())) {
-            throw new GeneralException(GeneralErrorCode.EMAIL_NOT_VERIFIED);
-        }
-
         // 중복 닉네임 검증
         if (userRepository.existsByNickName(request.getNickName())) {
             throw new GeneralException(GeneralErrorCode.DUPLICATE_NICKNAME);
@@ -199,6 +194,11 @@ public class AuthServiceImpl implements AuthService {
         // 중복 전화번호 검증
         if (userRepository.existsByPhoneNumber(request.getPhoneNumber())) {
             throw new GeneralException(GeneralErrorCode.DUPLICATE_PHONE);
+        }
+
+        // 이메일 인증 여부 검증
+        if (!emailService.isVerified(request.getEmail())) {
+            throw new GeneralException(GeneralErrorCode.EMAIL_NOT_VERIFIED);
         }
 
 
