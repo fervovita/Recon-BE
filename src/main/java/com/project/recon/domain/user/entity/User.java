@@ -49,6 +49,9 @@ public class User extends BaseEntity implements UserDetails {
     @Column(name = "phone_number", length = 20)
     private String phoneNumber;
 
+    @Column(name = "phone_verified")
+    private boolean phoneNumberVerified;
+
     public static User createKakaoUser(Long kakaoId, String nickName) {
         return User.builder()
                 .provider(ProviderType.KAKAO)
@@ -64,10 +67,15 @@ public class User extends BaseEntity implements UserDetails {
                 .email(email)
                 .password(password)
                 .phoneNumber(phoneNumber)
+                .phoneNumberVerified(false)
                 .birthDate(birthDate)
                 .provider(ProviderType.LOCAL)
                 .role(UserRole.USER)
                 .build();
+    }
+
+    public void verifyPhoneNumber() {
+        phoneNumberVerified = true;
     }
 
     @Override

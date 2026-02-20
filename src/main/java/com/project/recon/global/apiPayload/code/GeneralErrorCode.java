@@ -29,6 +29,13 @@ public enum GeneralErrorCode implements BaseErrorCode {
     EMAIL_CODE_ALREADY_SENT(HttpStatus.TOO_MANY_REQUESTS, "EMAIL_4291", "이미 인증 코드가 발송되었습니다. 잠시 후 다시 시도해주세요."),
     EMAIL_SEND_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "EMAIL_5001", "이메일 발송에 실패했습니다."),
 
+    // SMS 인증 에러
+    SMS_CODE_EXPIRED(HttpStatus.BAD_REQUEST, "SMS_4001", "인증 코드가 만료되었습니다."),
+    SMS_CODE_INVALID(HttpStatus.BAD_REQUEST, "SMS_4002", "인증 코드가 올바르지 않습니다."),
+    SMS_NOT_VERIFIED(HttpStatus.BAD_REQUEST, "SMS_4003", "전화번호 인증이 완료되지 않았습니다."),
+    SMS_ALREADY_VERIFIED(HttpStatus.BAD_REQUEST, "SMS_4004", "이미 인증된 전화번호입니다."),
+    SMS_CODE_ALREADY_SENT(HttpStatus.TOO_MANY_REQUESTS, "SMS_4291", "이미 인증 코드가 발송되었습니다. 잠시 후 다시 시도해주세요."),
+
     // 카카오 에러
     KAKAO_INVALID_CODE(HttpStatus.UNAUTHORIZED, "KAKAO_4011", "유효하지 않은 카카오 인가 코드입니다."),
     KAKAO_USER_INFO_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "KAKAO_5001", "카카오 사용자 정보 조회에 실패했습니다."),
