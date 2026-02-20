@@ -48,6 +48,7 @@ public enum GeneralErrorCode implements BaseErrorCode {
 
     // 장바구니 에러
     CART_SELLER_NO_ALLOWED(HttpStatus.FORBIDDEN, "CART_4031", "본인 상품은 장바구니에 담을 수 없습니다."),
+    CART_ITEM_NOT_FOUND(HttpStatus.NOT_FOUND, "CART_4041", "장바구니에 존재하지 않는 상품입니다."),
 
     // 리뷰 에러
     REVIEW_SELLER_NOT_ALLOWED(HttpStatus.FORBIDDEN, "REVIEW_4031", "판매자는 후기를 남길 수 없습니다."),

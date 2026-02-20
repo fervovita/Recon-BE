@@ -35,4 +35,23 @@ public class CartController {
         CartResponseDTO.CartListResponseDTO response = cartService.getCartItems(userId);
         return ApiResponse.onSuccess("장바구니 조회 성공", response);
     }
+
+    @Operation(summary = "장바구니 상품 수량 변경")
+    @PatchMapping("/{cartItemId}")
+    public ApiResponse<CartResponseDTO.UpdateCartItemResponseDTO> updateCartItem(
+            @AuthenticationPrincipal Long userId,
+            @PathVariable Long cartItemId,
+            @Valid @RequestBody CartRequestDTO.UpdateCartItemRequestDTO request) {
+        CartResponseDTO.UpdateCartItemResponseDTO response = cartService.updateCartItem(userId, cartItemId, request);
+        return ApiResponse.onSuccess("장바구니 수량 변경 성공", response);
+    }
+
+    @Operation(summary = "장바구니 상품 삭제")
+    @DeleteMapping("/{cartItemId}")
+    public ApiResponse<CartResponseDTO.DeleteCartItemResponseDTO> deleteCartItem(
+            @AuthenticationPrincipal Long userId,
+            @PathVariable Long cartItemId) {
+        CartResponseDTO.DeleteCartItemResponseDTO response = cartService.deleteCartItem(userId, cartItemId);
+        return ApiResponse.onSuccess("장바구니 상품 삭제 성공", response);
+    }
 }
