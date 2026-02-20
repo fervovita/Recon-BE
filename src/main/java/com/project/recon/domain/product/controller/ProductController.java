@@ -50,7 +50,7 @@ public class ProductController {
             @RequestParam(defaultValue = "desc") String sortDirection,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size) {
-        Pageable pageable = PageRequest.of(page - 1, size);
+        Pageable pageable = PageRequest.of(Math.max(page - 1, 1), Math.max(size, 1));
         Slice<ProductResponseDTO.ProductListResponseDTO> response = productService.getProducts(userId, keyword, category, sortBy, sortDirection, pageable);
         return ApiResponse.onSuccess("상품 목록 조회 성공", SliceResponseDTO.of(response));
     }
