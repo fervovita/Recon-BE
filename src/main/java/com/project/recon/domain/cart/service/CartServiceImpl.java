@@ -6,7 +6,9 @@ import com.project.recon.domain.cart.entity.Cart;
 import com.project.recon.domain.cart.entity.CartItem;
 import com.project.recon.domain.cart.repository.CartItemRepository;
 import com.project.recon.domain.cart.repository.CartRepository;
+import com.project.recon.domain.product.dto.ProductResponseDTO;
 import com.project.recon.domain.product.entity.Product;
+import com.project.recon.domain.product.entity.ProductImage;
 import com.project.recon.domain.product.repository.ProductRepository;
 import com.project.recon.domain.user.entity.User;
 import com.project.recon.domain.user.repository.UserRepository;
@@ -16,6 +18,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -74,5 +78,60 @@ public class CartServiceImpl implements CartService {
                 .quantity(cartItem.getQuantity())
                 .build();
 
+    }
+
+    @Override
+    public CartResponseDTO.CartListResponseDTO getCartItems(Long userId) {
+
+        // 장바구니 조회
+        Cart cart = cartRepository.findByUserId(userId)
+                .orElse(null);
+
+        // 장바구니가 존재하지 않으면
+        if (cart == null) {
+            return CartResponseDTO.CartListResponseDTO.builder()
+                    .cartItems(List.of())
+                    .cartTotalPrice(0L)
+                    .build();
+        }
+
+        // 장바구니 상품 조회
+        List<CartItem> cartItems = cartItemRepository.findByCartIdWithProductId(cart.getId());
+
+        // DTO에 맞게 변환
+        List<CartResponseDTO.CartItemDTO> cartItemDTOs = cartItems.stream()
+                .map(this::toCartItemDTO)
+                .toList();
+
+        // 장바구니 상품의 총 가격 계산
+        Long cartTotalPrice = cartItemDTOs.stream()
+                .mapToLong(CartResponseDTO.CartItemDTO::getTotalPrice)
+                .sum();
+
+        return CartResponseDTO.CartListResponseDTO.builder()
+                .cartItems(cartItemDTOs)
+                .cartTotalPrice(cartTotalPrice)
+                .build();
+    }
+
+    private CartResponseDTO.CartItemDTO toCartItemDTO(CartItem cartItem) {
+        Product product = cartItem.getProduct();
+
+        String thumbnail = product.getImages().stream()
+                .filter(img -> img.getImageOrder() == 0)
+                .map(ProductImage::getImageUrl)
+                .findFirst()
+                .orElse(null);
+
+        return CartResponseDTO.CartItemDTO.builder()
+                .cartItemId(cartItem.getId())
+                .productId(product.getId())
+                .productName(product.getProductName())
+                .price(product.getPrice())
+                .quantity(cartItem.getQuantity())
+                .thumbnail(thumbnail)
+                .stock(ProductResponseDTO.StockInfo.from(product.getStock()))
+                .totalPrice(product.getPrice() * cartItem.getQuantity())
+                .build();
     }
 }
