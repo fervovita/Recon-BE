@@ -112,6 +112,8 @@ public class ProductResponseDTO {
     @Builder
     @JsonInclude(value = JsonInclude.Include.NON_NULL)
     public static class StockInfo {
+        private static final int LOW_STOCK_THRESHOLD = 10;
+        
         private StockStatus status;
         private Integer quantity;
 
@@ -121,7 +123,7 @@ public class ProductResponseDTO {
 
             if (stock <= 0) {
                 status = StockStatus.OUT_OF_STOCK;
-            } else if (stock <= 10) {
+            } else if (stock <= LOW_STOCK_THRESHOLD) {
                 status = StockStatus.LOW_STOCK;
                 quantity = stock;
             } else {
