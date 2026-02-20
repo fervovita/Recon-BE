@@ -3,17 +3,18 @@ package com.project.recon.domain.product.controller;
 import com.project.recon.domain.product.dto.ProductRequestDTO;
 import com.project.recon.domain.product.dto.ProductResponseDTO;
 import com.project.recon.domain.product.entity.CategoryType;
+import com.project.recon.domain.product.entity.ProductSortType;
 import com.project.recon.domain.product.service.ProductService;
 import com.project.recon.global.apiPayload.response.ApiResponse;
 import com.project.recon.global.apiPayload.response.SliceResponseDTO;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -44,8 +45,13 @@ public class ProductController {
             @AuthenticationPrincipal Long userId,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) CategoryType category,
-            @ParameterObject @PageableDefault(size = 20) Pageable pageable) {
-        Slice<ProductResponseDTO.ProductListResponseDTO> response = productService.getProducts(userId, keyword, category, pageable);
+            @RequestParam(defaultValue = "CREATED_AT") ProductSortType sortBy,
+            @Parameter(description = "정렬 방향 (desc/asc)")
+            @RequestParam(defaultValue = "desc") String sortDirection,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        Pageable pageable = PageRequest.of(page - 1, size);
+        Slice<ProductResponseDTO.ProductListResponseDTO> response = productService.getProducts(userId, keyword, category, sortBy, sortDirection, pageable);
         return ApiResponse.onSuccess("상품 목록 조회 성공", SliceResponseDTO.of(response));
     }
 

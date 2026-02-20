@@ -2,10 +2,7 @@ package com.project.recon.domain.product.service;
 
 import com.project.recon.domain.product.dto.ProductRequestDTO;
 import com.project.recon.domain.product.dto.ProductResponseDTO;
-import com.project.recon.domain.product.entity.CategoryType;
-import com.project.recon.domain.product.entity.Product;
-import com.project.recon.domain.product.entity.ProductImage;
-import com.project.recon.domain.product.entity.ProductLike;
+import com.project.recon.domain.product.entity.*;
 import com.project.recon.domain.product.repository.ProductLikeRepository;
 import com.project.recon.domain.product.repository.ProductRepository;
 import com.project.recon.domain.user.entity.User;
@@ -70,10 +67,11 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public Slice<ProductResponseDTO.ProductListResponseDTO> getProducts(Long userId, String keyword, CategoryType category, Pageable pageable) {
+    public Slice<ProductResponseDTO.ProductListResponseDTO> getProducts(Long userId, String keyword, CategoryType category, ProductSortType sortBy, String sortDirection, Pageable pageable) {
 
         // 상품 목록 조회
-        Slice<Product> products = productRepository.searchProducts(keyword, category, pageable);
+        Slice<Product> products = productRepository.searchProducts(keyword, category, sortBy, sortDirection, pageable);
+
 
         // 조회된 상품의 id 추출
         List<Long> productIds = products.getContent().stream()
