@@ -35,4 +35,14 @@ public class CartController {
         CartResponseDTO.CartListResponseDTO response = cartService.getCartItems(userId);
         return ApiResponse.onSuccess("장바구니 조회 성공", response);
     }
+
+    @Operation(summary = "장바구니 상품 수량 변경")
+    @PatchMapping("/{cartItemId}")
+    public ApiResponse<CartResponseDTO.UpdateCartItemResponseDTO> updateCartItem(
+            @AuthenticationPrincipal Long userId,
+            @PathVariable Long cartItemId,
+            @Valid @RequestBody CartRequestDTO.UpdateCartItemRequestDTO request) {
+        CartResponseDTO.UpdateCartItemResponseDTO response = cartService.updateCartItem(userId, cartItemId, request);
+        return ApiResponse.onSuccess("장바구니 수량 변경 성공", response);
+    }
 }

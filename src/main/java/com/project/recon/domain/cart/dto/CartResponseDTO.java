@@ -33,6 +33,16 @@ public class CartResponseDTO {
     @AllArgsConstructor
     @NoArgsConstructor
     @Builder
+    public static class UpdateCartItemResponseDTO {
+        private Long cartItemId;
+        private Integer quantity;
+        private Long totalPrice;
+    }
+
+    @Getter
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @Builder
     public static class CartItemDTO {
         private Long cartItemId;
         private Long productId;

@@ -16,4 +16,12 @@ public class CartRequestDTO {
         @Min(value = 1, message = "수량은 1 이상이어야 합니다.")
         private Integer quantity;
     }
+
+    @Getter
+    public static class UpdateCartItemRequestDTO {
+
+        @NotNull(message = "수량이 없습니다.")
+        @Min(value = 1, message = "수량은 1 이상이어야 합니다.")
+        private Integer quantity;
+    }
 }

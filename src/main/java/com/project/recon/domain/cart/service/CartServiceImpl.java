@@ -134,4 +134,32 @@ public class CartServiceImpl implements CartService {
                 .totalPrice(product.getPrice() * cartItem.getQuantity())
                 .build();
     }
+
+    @Override
+    @Transactional
+    public CartResponseDTO.UpdateCartItemResponseDTO updateCartItem(Long userId, Long cartItemId, CartRequestDTO.UpdateCartItemRequestDTO request) {
+
+        // 장바구니 상품 조회
+        CartItem cartItem = cartItemRepository.findById(cartItemId)
+                .orElseThrow(() -> new GeneralException(GeneralErrorCode.CART_ITEM_NOT_FOUND));
+
+        // 본인 장바구니인지 확인
+        if (!cartItem.getCart().getUser().getId().equals(userId)) {
+            throw new GeneralException(GeneralErrorCode.FORBIDDEN);
+        }
+
+        // 재고 검증
+        if (request.getQuantity() > cartItem.getProduct().getStock()) {
+            throw new GeneralException(GeneralErrorCode.OUT_OF_STOCK);
+        }
+
+        // 수량 변경
+        cartItem.updateQuantity(request.getQuantity());
+
+        return CartResponseDTO.UpdateCartItemResponseDTO.builder()
+                .cartItemId(cartItem.getId())
+                .quantity(cartItem.getQuantity())
+                .totalPrice(cartItem.getProduct().getPrice() * cartItem.getQuantity())
+                .build();
+    }
 }
