@@ -62,6 +62,7 @@ public class ProductServiceImpl implements ProductService {
                 .category(product.getCategory())
                 .seller(ProductResponseDTO.SellerInfo.from(product.getSeller()))
                 .imageUrls(imageUrls)
+                .stock(ProductResponseDTO.StockInfo.from(product.getStock()))
                 .likeCount(likeCount)
                 .liked(liked)
                 .createdAt(product.getCreatedAt())
@@ -120,6 +121,7 @@ public class ProductServiceImpl implements ProductService {
                 request.getPrice(),
                 request.getCategory(),
                 request.getDescription(),
+                request.getStock(),
                 seller
         );
 
@@ -262,6 +264,7 @@ public class ProductServiceImpl implements ProductService {
                 .price(product.getPrice())
                 .category(product.getCategory())
                 .thumbnail(thumbnail)
+                .stock(ProductResponseDTO.StockInfo.from(product.getStock()))
                 .likeCount(likeCountMap.getOrDefault(product.getId(), 0L))
                 .liked(likedProductIds.contains(product.getId()))
                 .createdAt(product.getCreatedAt())
