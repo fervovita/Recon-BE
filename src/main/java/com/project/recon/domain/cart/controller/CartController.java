@@ -9,10 +9,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -29,5 +26,13 @@ public class CartController {
             @Valid @RequestBody CartRequestDTO.AddCartItemRequestDTO request) {
         CartResponseDTO.AddCartItemResponseDTO response = cartService.addCartItem(userId, request);
         return ApiResponse.onSuccess("장바구니 추가 성공", response);
+    }
+
+    @Operation(summary = "장바구니 조회")
+    @GetMapping
+    public ApiResponse<CartResponseDTO.CartListResponseDTO> getCartItems(
+            @AuthenticationPrincipal Long userId) {
+        CartResponseDTO.CartListResponseDTO response = cartService.getCartItems(userId);
+        return ApiResponse.onSuccess("장바구니 조회 성공", response);
     }
 }
