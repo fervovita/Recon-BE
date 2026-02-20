@@ -19,6 +19,7 @@ public class UserResponseDTO {
         private String nickName;
         private String email;
         private String phoneNumber;
+        private boolean phoneNumberVerified;
         private LocalDate birthDate;
         private ProviderType provider;
     }
