@@ -53,6 +53,9 @@ dependencies {
     // email
     implementation 'org.springframework.boot:spring-boot-starter-mail'
 
+    // sms
+    implementation 'com.solapi:sdk:1.0.3'
+
     // thymeleaf
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
 
