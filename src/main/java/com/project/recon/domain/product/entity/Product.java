@@ -34,6 +34,9 @@ public class Product extends BaseEntity {
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 
+    @Column(name = "stock", nullable = false)
+    private int stock;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "seller_id", nullable = false)
     private User seller;
@@ -43,12 +46,13 @@ public class Product extends BaseEntity {
     private List<ProductImage> images = new ArrayList<>();
 
 
-    public static Product createProduct(String productName, Long price, CategoryType category, String description, User seller) {
+    public static Product createProduct(String productName, Long price, CategoryType category, String description, int stock, User seller) {
         return Product.builder()
                 .productName(productName)
                 .price(price)
                 .category(category)
                 .description(description)
+                .stock(stock)
                 .seller(seller)
                 .build();
     }

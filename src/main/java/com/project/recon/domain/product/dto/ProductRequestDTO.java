@@ -2,10 +2,7 @@ package com.project.recon.domain.product.dto;
 
 
 import com.project.recon.domain.product.entity.CategoryType;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 import lombok.Getter;
 
 import java.util.List;
@@ -27,6 +24,10 @@ public class ProductRequestDTO {
         @NotBlank(message = "상품 설명이 없습니다.")
         @Size(max = 15000, message = "상품 설명은 15,000자 이내로 입력해주세요.")  // TEXT 기준
         private String description;
+
+        @NotNull(message = "재고 수량이 없습니다.")
+        @Min(value = 0, message = "재고는 0 이상이어야 합니다.")
+        private Integer stock;
     }
 
     @Getter

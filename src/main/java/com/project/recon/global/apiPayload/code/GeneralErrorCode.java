@@ -46,6 +46,9 @@ public enum GeneralErrorCode implements BaseErrorCode {
     INVALID_FILE_ORDER(HttpStatus.BAD_REQUEST, "PRODUCT_4003", "파일의 순서가 잘못되었습니다."),
     PRODUCT_NOT_SELLER(HttpStatus.FORBIDDEN, "PRODUCT_4031", "상품의 판매자가 아닙니다."),
 
+    // 장바구니 에러
+    CART_SELLER_NO_ALLOWED(HttpStatus.FORBIDDEN, "CART_4031", "본인 상품은 장바구니에 담을 수 없습니다."),
+
     // 리뷰 에러
     REVIEW_SELLER_NOT_ALLOWED(HttpStatus.FORBIDDEN, "REVIEW_4031", "판매자는 후기를 남길 수 없습니다."),
     REVIEW_NOT_WRITER(HttpStatus.FORBIDDEN, "REVIEW_4032", "후기 작성자가 아닙니다."),
