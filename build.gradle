@@ -56,6 +56,9 @@ dependencies {
     // sms
     implementation 'com.solapi:sdk:1.0.3'
 
+    // elasticsearch
+    implementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch'
+
     // thymeleaf
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
 

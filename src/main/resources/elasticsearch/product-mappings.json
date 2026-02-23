@@ -1,0 +1,38 @@
+{
+  "properties": {
+    "id": {
+      "type": "long"
+    },
+    "productName": {
+      "type": "text",
+      "analyzer": "nori_analyzer",
+      "fields": {
+        "keyword": {
+          "type": "keyword"
+        },
+        "autocomplete": {
+          "type": "text",
+          "analyzer": "autocomplete_analyzer",
+          "search_analyzer": "autocomplete_search_analyzer"
+        }
+      }
+    },
+    "description": {
+      "type": "text",
+      "analyzer": "nori_analyzer"
+    },
+    "category": {
+      "type": "keyword"
+    },
+    "price": {
+      "type": "long"
+    },
+    "stock": {
+      "type": "integer"
+    },
+    "createdAt": {
+      "type": "date",
+      "format": "yyyy-MM-dd'T'HH:mm:ss.SSS||yyyy-MM-dd'T'HH:mm:ss||epoch_millis"
+    }
+  }
+}
