@@ -11,6 +11,9 @@ import org.springframework.data.elasticsearch.client.elc.NativeQuery;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.SearchHits;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Recover;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -81,21 +84,33 @@ public class ProductSearchServiceImpl implements ProductSearchService {
 
     // 인덱싱 : DB의 상품을 ES에 저장
     @Override
+    @Retryable(
+            retryFor = Exception.class,
+            maxAttempts = 3,
+            backoff = @Backoff(delay = 1000, multiplier = 2)
+    )
     public void indexProduct(Product product) {
-        try {
-            productSearchRepository.save(ProductDocument.from(product));
-        } catch (Exception e) {
-            log.error("Elasticsearch 인덱싱 실패 (productId={}): {}", product.getId(), e.getMessage());
-        }
+        productSearchRepository.save(ProductDocument.from(product));
+    }
+
+    @Recover
+    public void recoverIndex(Exception e, Product product) {
+        log.error("Elasticsearch 인덱싱 최종 실패 (productId={}): {}", product.getId(), e.getMessage());
     }
 
     // 삭제 : ES에서 상품 삭제
     @Override
+    @Retryable(
+            retryFor = Exception.class,
+            maxAttempts = 3,
+            backoff = @Backoff(delay = 1000, multiplier = 2)
+    )
     public void deleteProduct(Long productId) {
-        try {
-            productSearchRepository.deleteById(productId);
-        } catch (Exception e) {
-            log.error("Elasticsearch 삭제 실패 (productId={}): {}", productId, e.getMessage());
-        }
+        productSearchRepository.deleteById(productId);
+    }
+
+    @Recover
+    public void recoverDelete(Exception e, Long productId) {
+        log.error("Elasticsearch 삭제 실패 (productId={}): {}", productId, e.getMessage());
     }
 }
