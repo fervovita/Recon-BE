@@ -30,6 +30,9 @@ public class ProductIndexScheduler {
 
         log.info("[Scheduler] Elasticsearch 전체 동기화 시작");
 
+        // 기존 인덱스 전체 삭제
+        productSearchRepository.deleteAll();
+
         while (true) {
             Page<Product> productPage = productRepository.findAll(PageRequest.of(page, CHUNK_SIZE));
 
