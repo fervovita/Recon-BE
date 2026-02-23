@@ -34,7 +34,8 @@ services:
     networks:
       - recon-network
     depends_on:
-      - elasticsearch
+      elasticsearch:
+        condition: service_healthy
 
 
   elasticsearch:
@@ -50,6 +51,11 @@ services:
       - ES_JAVA_OPTS=-Xms1g -Xmx1g
     volumes:
       - es-data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -s -u elastic:${SPRING_ELASTICSEARCH_PASSWORD} http://localhost:9200/_cluster/health || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
     networks:
       - recon-network
 
