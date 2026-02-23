@@ -26,11 +26,54 @@ services:
       COOLSMS_API_KEY: ${COOLSMS_API_KEY}
       COOLSMS_API_SECRET: ${COOLSMS_API_SECRET}
       COOLSMS_SENDER_NUMBER: ${COOLSMS_SENDER_NUMBER}
+      SPRING_ELASTICSEARCH_URIS: ${SPRING_ELASTICSEARCH_URIS}
+      SPRING_ELASTICSEARCH_USERNAME: ${SPRING_ELASTICSEARCH_USERNAME}
+      SPRING_ELASTICSEARCH_PASSWORD: ${SPRING_ELASTICSEARCH_PASSWORD}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     networks:
       - recon-network
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
 
+
+  elasticsearch:
+    build:
+      context: .
+      dockerfile: Dockerfile.elasticsearch
+    container_name: recon-elasticsearch
+    restart: unless-stopped
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=true
+      - ELASTIC_PASSWORD=${SPRING_ELASTICSEARCH_PASSWORD}
+      - ES_JAVA_OPTS=-Xms1g -Xmx1g
+    volumes:
+      - es-data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -s -u elastic:${SPRING_ELASTICSEARCH_PASSWORD} http://localhost:9200/_cluster/health || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - recon-network
+
+  kibana:
+    image: kibana:8.18.8
+    container_name: recon-kibana
+    restart: unless-stopped
+    environment:
+      - ELASTICSEARCH_HOSTS=${SPRING_ELASTICSEARCH_URIS}
+      - ELASTICSEARCH_USERNAME=${SPRING_ELASTICSEARCH_USERNAME}
+      - ELASTICSEARCH_PASSWORD=${SPRING_ELASTICSEARCH_PASSWORD}
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
+    networks:
+      - recon-network
+  
   nginx:
     image: nginx:1.25-alpine
     container_name: recon-nginx
@@ -60,3 +103,6 @@ services:
 networks:
   recon-network:
     driver: bridge
+
+volumes:
+  es-data:

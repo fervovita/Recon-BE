@@ -3,6 +3,7 @@ package com.project.recon.domain.product.service;
 import com.project.recon.domain.product.dto.ProductRequestDTO;
 import com.project.recon.domain.product.dto.ProductResponseDTO;
 import com.project.recon.domain.product.entity.*;
+import com.project.recon.domain.product.event.ProductEvent;
 import com.project.recon.domain.product.repository.ProductLikeRepository;
 import com.project.recon.domain.product.repository.ProductRepository;
 import com.project.recon.domain.user.entity.User;
@@ -12,8 +13,10 @@ import com.project.recon.global.apiPayload.exception.GeneralException;
 import com.project.recon.global.s3.S3Service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.SliceImpl;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -31,6 +34,8 @@ public class ProductServiceImpl implements ProductService {
     private final ProductRepository productRepository;
     private final S3Service s3Service;
     private final ProductLikeRepository productLikeRepository;
+    private final ProductSearchService productSearchService;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     public ProductResponseDTO.ProductDetailResponseDTO getProduct(Long userId, Long productId) {
@@ -70,7 +75,17 @@ public class ProductServiceImpl implements ProductService {
     public Slice<ProductResponseDTO.ProductListResponseDTO> getProducts(Long userId, String keyword, CategoryType category, ProductSortType sortBy, String sortDirection, Pageable pageable) {
 
         // 상품 목록 조회
-        Slice<Product> products = productRepository.searchProducts(keyword, category, sortBy, sortDirection, pageable);
+        Slice<Product> products;
+        if (keyword != null && !keyword.isBlank()) {
+            List<Long> matchIds = productSearchService.searchProductIds(keyword);
+            if (matchIds.isEmpty()) {
+                return new SliceImpl<>(List.of(), pageable, false);
+            }
+
+            products = productRepository.searchProductByIds(matchIds, category, sortBy, sortDirection, pageable);
+        } else {
+            products = productRepository.searchProducts(null, category, sortBy, sortDirection, pageable);
+        }
 
 
         // 조회된 상품의 id 추출
@@ -136,6 +151,9 @@ public class ProductServiceImpl implements ProductService {
         // 상품 저장
         productRepository.save(product);
 
+        // 상품 생성 이벤트 발행
+        eventPublisher.publishEvent(new ProductEvent(product.getId(), ProductEvent.EventType.CREATED));
+
         return ProductResponseDTO.CreateProductResponseDTO.builder()
                 .id(product.getId())
                 .build();
@@ -164,6 +182,9 @@ public class ProductServiceImpl implements ProductService {
 
         // S3에서 이미지 삭제
         imageUrls.forEach(s3Service::delete);
+
+        // 상품 삭제 이벤트 발행
+        eventPublisher.publishEvent(new ProductEvent(product.getId(), ProductEvent.EventType.DELETED));
 
         return ProductResponseDTO.DeleteProductResponseDTO.builder()
                 .id(product.getId())
@@ -199,6 +220,8 @@ public class ProductServiceImpl implements ProductService {
             replaceImageUrl(product, imageOrder, newImages);
         }
 
+        // 상품 수정 이벤트 발행
+        eventPublisher.publishEvent(new ProductEvent(product.getId(), ProductEvent.EventType.UPDATED));
 
         return ProductResponseDTO.UpdateProductResponseDTO.builder()
                 .id(product.getId())

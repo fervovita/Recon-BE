@@ -4,6 +4,7 @@ import com.project.recon.domain.product.dto.ProductRequestDTO;
 import com.project.recon.domain.product.dto.ProductResponseDTO;
 import com.project.recon.domain.product.entity.CategoryType;
 import com.project.recon.domain.product.entity.ProductSortType;
+import com.project.recon.domain.product.service.ProductSearchService;
 import com.project.recon.domain.product.service.ProductService;
 import com.project.recon.global.apiPayload.response.ApiResponse;
 import com.project.recon.global.apiPayload.response.SliceResponseDTO;
@@ -11,24 +12,29 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
 @RestController
+@Validated
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/products")
 @Tag(name = "Product", description = "상품 관련 API")
 public class ProductController {
 
     private final ProductService productService;
+    private final ProductSearchService productSearchService;
 
     @Operation(summary = "상품 조회")
     @GetMapping("/{productId}")
@@ -53,6 +59,15 @@ public class ProductController {
         Pageable pageable = PageRequest.of(Math.max(page - 1, 0), Math.max(size, 1));
         Slice<ProductResponseDTO.ProductListResponseDTO> response = productService.getProducts(userId, keyword, category, sortBy, sortDirection, pageable);
         return ApiResponse.onSuccess("상품 목록 조회 성공", SliceResponseDTO.of(response));
+    }
+
+    @Operation(summary = "검색 자동완성")
+    @GetMapping("/autocomplete")
+    public ApiResponse<List<String>> autocomplete(
+            @RequestParam String keyword,
+            @RequestParam(defaultValue = "10") @Min(1) @Max(20) int size) {
+        List<String> suggestions = productSearchService.autoComplete(keyword, size);
+        return ApiResponse.onSuccess("자동완성 조회 성공", suggestions);
     }
 
     @Operation(summary = "상품 등록")

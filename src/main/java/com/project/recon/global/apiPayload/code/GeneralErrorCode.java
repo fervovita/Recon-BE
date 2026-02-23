@@ -63,6 +63,9 @@ public enum GeneralErrorCode implements BaseErrorCode {
     DUPLICATE_REVIEW(HttpStatus.BAD_REQUEST, "REVIEW_4001", "이미 후기를 작성한 상품입니다."),
     REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND, "REVIEW_4041", "존재하지 않는 후기입니다."),
 
+    // 검색 에러
+    SEARCH_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "SEARCH_5001", "검색 서비스에 오류가 발생했습니다."),
+
     // 주문 에러
     ORDER_NOT_FOUND(HttpStatus.NOT_FOUND, "ORD_4041", "존재하지 않는 주문입니다."),
     ORDER_CANNOT_CANCEL(HttpStatus.BAD_REQUEST, "ORD_4001", "배송이 시작되어 취소가 불가능합니다."),
