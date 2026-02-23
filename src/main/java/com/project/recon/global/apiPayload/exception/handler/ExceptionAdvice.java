@@ -4,6 +4,7 @@ import com.project.recon.global.apiPayload.code.BaseErrorCode;
 import com.project.recon.global.apiPayload.code.GeneralErrorCode;
 import com.project.recon.global.apiPayload.exception.GeneralException;
 import com.project.recon.global.apiPayload.response.ApiResponse;
+import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.mapping.PropertyReferenceException;
@@ -89,6 +90,21 @@ public class ExceptionAdvice {
         return ResponseEntity
                 .status(code.getHttpStatus())
                 .body(ApiResponse.onFailure(code, code.getMessage()));
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ApiResponse<Object>> handleConstraintViolationException(ConstraintViolationException e) {
+        var errors = e.getConstraintViolations().stream()
+                .map(v -> String.format("[%s] %s", v.getPropertyPath().toString(), v.getMessage()))
+                .toList();
+
+        BaseErrorCode code = GeneralErrorCode.INVALID_PARAMETER;
+
+        log.warn("ConstraintViolationException: {}", e.getMessage());
+
+        return ResponseEntity
+                .status(code.getHttpStatus())
+                .body(ApiResponse.onFailure(code, errors));
     }
 
     @ExceptionHandler(Exception.class)
