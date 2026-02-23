@@ -25,7 +25,7 @@ public class ProductSearchServiceImpl implements ProductSearchService {
 
     private final ProductSearchRepository productSearchRepository;
 
-    // 상품 검색 : keyword로 ES에서 맻칭되는 상품 ID만 반환
+    // 상품 검색 : keyword로 ES에서 매칭되는 상품 ID만 반환
     @Override
     public List<Long> searchProductIds(String keyword) {
         try {
