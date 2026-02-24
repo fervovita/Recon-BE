@@ -1,10 +1,7 @@
 package com.project.recon.domain.auth.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.*;
 import lombok.Getter;
 
 import java.time.LocalDate;
@@ -41,6 +38,7 @@ public class AuthRequestDTO {
     @Getter
     public static class SignupRequestDTO {
         @NotBlank(message = "닉네임이 없습니다.")
+        @Size(min = 2, max = 20, message = "닉네임은 2자 이상 20자 이하로 입력해주세요.")
         private String nickName;
 
         @NotBlank(message = "이메일이 없습니다.")

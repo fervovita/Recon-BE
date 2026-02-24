@@ -40,6 +40,28 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
+    public UserResponseDTO.UserProfileResponseDTO updateNickName(Long userId, UserRequestDTO.UpdateNickNameRequestDTO request) {
+
+        // 유저 조회
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new GeneralException(GeneralErrorCode.MEMBER_NOT_FOUND));
+
+        // 닉네임 수정
+        user.updateNickName(request.getNickName());
+
+        return UserResponseDTO.UserProfileResponseDTO.builder()
+                .id(user.getId())
+                .nickName(user.getNickName())
+                .email(user.getEmail())
+                .phoneNumber(user.getPhoneNumber())
+                .phoneNumberVerified(user.isPhoneNumberVerified())
+                .birthDate(user.getBirthDate())
+                .provider(user.getProvider())
+                .build();
+    }
+
+    @Override
     public void sendSmsCode(Long userId) {
 
         // 유저 조회

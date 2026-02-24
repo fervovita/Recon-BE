@@ -26,6 +26,15 @@ public class UserController {
         return ApiResponse.onSuccess("유저 정보 조회 성공", response);
     }
 
+    @Operation(summary = "유저 닉네임 수정")
+    @PatchMapping("/nickname")
+    public ApiResponse<UserResponseDTO.UserProfileResponseDTO> updateNickName(
+            @AuthenticationPrincipal Long userId,
+            @Valid @RequestBody UserRequestDTO.UpdateNickNameRequestDTO request) {
+        UserResponseDTO.UserProfileResponseDTO response = userService.updateNickName(userId, request);
+        return ApiResponse.onSuccess("유저 닉네임 수정 성공", response);
+    }
+
     @Operation(summary = "SMS 인증 코드 발송")
     @PostMapping("/sms/send")
     public ApiResponse<Void> sendSmsCode(@AuthenticationPrincipal Long userId) {

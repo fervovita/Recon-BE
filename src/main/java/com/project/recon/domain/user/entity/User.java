@@ -78,6 +78,10 @@ public class User extends BaseEntity implements UserDetails {
         phoneNumberVerified = true;
     }
 
+    public void updateNickName(String nickName) {
+        this.nickName = nickName;
+    }
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
