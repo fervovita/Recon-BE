@@ -7,7 +7,13 @@ public interface UserService {
 
     UserResponseDTO.UserProfileResponseDTO getUserProfile(Long userId);
 
-    void sendSmsCode(Long userId);
+    UserResponseDTO.UserProfileResponseDTO updateNickName(Long userId, UserRequestDTO.UpdateNickNameRequestDTO request);
 
-    void verifySmsCode(Long userId, UserRequestDTO.SmsVerifyRequestDTO request);
+    void sendEmailCode(Long userId, UserRequestDTO.EmailSendRequestDTO request);
+
+    UserResponseDTO.UserProfileResponseDTO updateEmail(Long userId, UserRequestDTO.UpdateEmailRequestDTO request);
+
+    void sendPhoneCode(Long userId, UserRequestDTO.PhoneSendRequestDTO request);
+
+    UserResponseDTO.UserProfileResponseDTO updatePhoneNumber(Long userId, UserRequestDTO.UpdatePhoneRequestDTO request);
 }

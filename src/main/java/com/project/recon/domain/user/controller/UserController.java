@@ -26,19 +26,48 @@ public class UserController {
         return ApiResponse.onSuccess("유저 정보 조회 성공", response);
     }
 
-    @Operation(summary = "SMS 인증 코드 발송")
-    @PostMapping("/sms/send")
-    public ApiResponse<Void> sendSmsCode(@AuthenticationPrincipal Long userId) {
-        userService.sendSmsCode(userId);
+    @Operation(summary = "유저 닉네임 수정")
+    @PatchMapping("/nickname")
+    public ApiResponse<UserResponseDTO.UserProfileResponseDTO> updateNickName(
+            @AuthenticationPrincipal Long userId,
+            @Valid @RequestBody UserRequestDTO.UpdateNickNameRequestDTO request) {
+        UserResponseDTO.UserProfileResponseDTO response = userService.updateNickName(userId, request);
+        return ApiResponse.onSuccess("유저 닉네임 수정 성공", response);
+    }
+
+    @Operation(summary = "이메일 변경 인증 코드 발송")
+    @PostMapping("/email/send")
+    public ApiResponse<Void> sendEmailCode(
+            @AuthenticationPrincipal Long userId,
+            @Valid @RequestBody UserRequestDTO.EmailSendRequestDTO request) {
+        userService.sendEmailCode(userId, request);
         return ApiResponse.onSuccess("인증 코드가 발송되었습니다.");
     }
 
-    @Operation(summary = "SMS 인증 코드 검증")
-    @PostMapping("/sms/verify")
-    public ApiResponse<Void> verifySmsCode(
+    @Operation(summary = "이메일 변경")
+    @PatchMapping("/email")
+    public ApiResponse<UserResponseDTO.UserProfileResponseDTO> updateEmail(
             @AuthenticationPrincipal Long userId,
-            @Valid @RequestBody UserRequestDTO.SmsVerifyRequestDTO request) {
-        userService.verifySmsCode(userId, request);
-        return ApiResponse.onSuccess("전화번호 인증 성공");
+            @Valid @RequestBody UserRequestDTO.UpdateEmailRequestDTO request) {
+        UserResponseDTO.UserProfileResponseDTO response = userService.updateEmail(userId, request);
+        return ApiResponse.onSuccess("이메일 변경 성공", response);
+    }
+
+    @Operation(summary = "전화번호 인증 코드 발송")
+    @PostMapping("/phone/send")
+    public ApiResponse<Void> sendPhoneCode(
+            @AuthenticationPrincipal Long userId,
+            @Valid @RequestBody UserRequestDTO.PhoneSendRequestDTO request) {
+        userService.sendPhoneCode(userId, request);
+        return ApiResponse.onSuccess("인증 코드가 발송되었습니다.");
+    }
+
+    @Operation(summary = "전화번호 변경 및 인증 코드 검증", description = "최초 전화번호 인증 또는 새 전화번호로 변경시 사용됩니다.")
+    @PatchMapping("/phone")
+    public ApiResponse<UserResponseDTO.UserProfileResponseDTO> updatePhoneNumber(
+            @AuthenticationPrincipal Long userId,
+            @Valid @RequestBody UserRequestDTO.UpdatePhoneRequestDTO request) {
+        UserResponseDTO.UserProfileResponseDTO response = userService.updatePhoneNumber(userId, request);
+        return ApiResponse.onSuccess("전화번호 변경 및 인증 성공", response);
     }
 }

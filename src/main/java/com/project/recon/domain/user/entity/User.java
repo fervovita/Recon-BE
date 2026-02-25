@@ -74,7 +74,16 @@ public class User extends BaseEntity implements UserDetails {
                 .build();
     }
 
-    public void verifyPhoneNumber() {
+    public void updateNickName(String nickName) {
+        this.nickName = nickName;
+    }
+
+    public void updateEmail(String email) {
+        this.email = email;
+    }
+
+    public void updatePhoneNumber(String phoneNumber) {
+        this.phoneNumber = phoneNumber;
         phoneNumberVerified = true;
     }
 
