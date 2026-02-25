@@ -8,4 +8,6 @@ public interface OrderService {
     OrderResponseDTO.OrderDetailResponseDTO createOrderFromCart(Long userId, OrderRequestDTO.CartOrderRequestDTO request);
 
     OrderResponseDTO.OrderDetailResponseDTO createDirectOrder(Long userId, OrderRequestDTO.DirectOrderRequestDTO request);
+
+    OrderResponseDTO.OrderDetailResponseDTO payOrder(Long userId, Long orderId);
 }

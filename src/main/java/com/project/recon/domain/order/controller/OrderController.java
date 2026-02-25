@@ -9,10 +9,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -38,6 +35,15 @@ public class OrderController {
             @Valid @RequestBody OrderRequestDTO.DirectOrderRequestDTO request) {
         OrderResponseDTO.OrderDetailResponseDTO response = orderService.createDirectOrder(userId, request);
         return ApiResponse.onSuccess("주문 생성 성공", response);
+    }
+
+    @Operation(summary = "주문 결제")
+    @PostMapping("/{orderId}/pay")
+    public ApiResponse<OrderResponseDTO.OrderDetailResponseDTO> payOrder(
+            @AuthenticationPrincipal Long userId,
+            @PathVariable Long orderId) {
+        OrderResponseDTO.OrderDetailResponseDTO response = orderService.payOrder(userId, orderId);
+        return ApiResponse.onSuccess("결제 성공", response);
     }
 
 }

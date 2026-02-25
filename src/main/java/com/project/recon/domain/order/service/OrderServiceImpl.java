@@ -6,6 +6,7 @@ import com.project.recon.domain.order.dto.OrderRequestDTO;
 import com.project.recon.domain.order.dto.OrderResponseDTO;
 import com.project.recon.domain.order.entity.Order;
 import com.project.recon.domain.order.entity.OrderItem;
+import com.project.recon.domain.order.entity.OrderStatus;
 import com.project.recon.domain.order.repository.OrderRepository;
 import com.project.recon.domain.product.entity.Product;
 import com.project.recon.domain.product.repository.ProductRepository;
@@ -13,11 +14,13 @@ import com.project.recon.domain.user.entity.User;
 import com.project.recon.domain.user.repository.UserRepository;
 import com.project.recon.global.apiPayload.code.GeneralErrorCode;
 import com.project.recon.global.apiPayload.exception.GeneralException;
+import com.project.recon.global.stock.StockService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -30,6 +33,7 @@ public class OrderServiceImpl implements OrderService {
     private final ProductRepository productRepository;
     private final CartItemRepository cartItemRepository;
     private final OrderRepository orderRepository;
+    private final StockService stockService;
 
     @Override
     @Transactional
@@ -81,6 +85,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional
     public OrderResponseDTO.OrderDetailResponseDTO createDirectOrder(Long userId, OrderRequestDTO.DirectOrderRequestDTO request) {
 
         // 유저 조회
@@ -109,6 +114,51 @@ public class OrderServiceImpl implements OrderService {
 
         Order order = Order.createOrder(user, totalPrice, List.of(orderItem));
         orderRepository.save(order);
+
+        return toOrderDetailResponse(order);
+    }
+
+    @Override
+    @Transactional
+    public OrderResponseDTO.OrderDetailResponseDTO payOrder(Long userId, Long orderId) {
+
+        // 주문 조회
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new GeneralException(GeneralErrorCode.ORDER_NOT_FOUND));
+
+        // 본인 주문 여부 확인
+        if (!order.getUser().getId().equals(userId)) {
+            throw new GeneralException(GeneralErrorCode.ORDER_NOT_BUYER);
+        }
+
+        // 상태 확인
+        if (order.getStatus() != OrderStatus.PENDING) {
+            throw new GeneralException(GeneralErrorCode.ORDER_ALREADY_COMPLETED);
+        }
+
+        // Redis 재고 차감
+        List<OrderItem> decreasedItems = new ArrayList<>();
+
+        try {
+            for (OrderItem item : order.getOrderItems()) {
+                stockService.decreaseStock(item.getProduct().getId(), item.getQuantity());
+                decreasedItems.add(item);
+            }
+        } catch (GeneralException e) {
+            // 이미 차감한 재고 롤백
+            for (OrderItem item : decreasedItems) {
+                stockService.increaseStock(item.getProduct().getId(), item.getQuantity());
+            }
+            throw e;
+        }
+
+        // DB 재고 동기화
+        for (OrderItem item : order.getOrderItems()) {
+            productRepository.decreaseStock(item.getProduct().getId(), item.getQuantity());
+        }
+
+        // 주문 확정
+        order.confirm();
 
         return toOrderDetailResponse(order);
     }
