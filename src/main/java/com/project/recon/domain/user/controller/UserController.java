@@ -63,7 +63,7 @@ public class UserController {
     }
 
     @Operation(summary = "전화번호 변경 및 인증 코드 검증", description = "최초 전화번호 인증 또는 새 전화번호로 변경시 사용됩니다.")
-    @PostMapping("/phone")
+    @PatchMapping("/phone")
     public ApiResponse<UserResponseDTO.UserProfileResponseDTO> updatePhoneNumber(
             @AuthenticationPrincipal Long userId,
             @Valid @RequestBody UserRequestDTO.UpdatePhoneRequestDTO request) {
