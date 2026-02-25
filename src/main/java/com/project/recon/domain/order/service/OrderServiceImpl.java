@@ -123,7 +123,7 @@ public class OrderServiceImpl implements OrderService {
     public OrderResponseDTO.OrderDetailResponseDTO payOrder(Long userId, Long orderId) {
 
         // 주문 조회
-        Order order = orderRepository.findById(orderId)
+        Order order = orderRepository.findByOrderIdWithItems(orderId)
                 .orElseThrow(() -> new GeneralException(GeneralErrorCode.ORDER_NOT_FOUND));
 
         // 본인 주문 여부 확인
@@ -171,7 +171,7 @@ public class OrderServiceImpl implements OrderService {
     public void cancelOrder(Long userId, Long orderId) {
 
         // 주문 조회
-        Order order = orderRepository.findById(orderId)
+        Order order = orderRepository.findByOrderIdWithItems(orderId)
                 .orElseThrow(() -> new GeneralException(GeneralErrorCode.ORDER_NOT_FOUND));
 
         // 본인 주문 여부 확인
