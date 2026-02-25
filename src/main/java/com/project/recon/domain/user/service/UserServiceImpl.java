@@ -6,6 +6,7 @@ import com.project.recon.domain.user.entity.User;
 import com.project.recon.domain.user.repository.UserRepository;
 import com.project.recon.global.apiPayload.code.GeneralErrorCode;
 import com.project.recon.global.apiPayload.exception.GeneralException;
+import com.project.recon.global.email.EmailService;
 import com.project.recon.global.sms.SmsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +21,7 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final SmsService smsService;
+    private final EmailService emailService;
 
     @Override
     public UserResponseDTO.UserProfileResponseDTO getUserProfile(Long userId) {
@@ -59,6 +61,61 @@ public class UserServiceImpl implements UserService {
                 .birthDate(user.getBirthDate())
                 .provider(user.getProvider())
                 .build();
+    }
+
+    @Override
+    public void sendEmailCode(Long userId, UserRequestDTO.EmailSendRequestDTO request) {
+
+        // 유저 존재 확인
+        if (!userRepository.existsById(userId)) {
+            throw new GeneralException(GeneralErrorCode.MEMBER_NOT_FOUND);
+        }
+
+        // 이메일 중복 확인
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new GeneralException(GeneralErrorCode.DUPLICATE_EMAIL);
+        }
+
+        // 인증 코드 발송
+        emailService.sendVerificationCode(request.getEmail());
+    }
+
+    @Override
+    @Transactional
+    public UserResponseDTO.UserProfileResponseDTO updateEmail(Long userId, UserRequestDTO.UpdateEmailRequestDTO request) {
+
+        // 유저 조회
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new GeneralException(GeneralErrorCode.MEMBER_NOT_FOUND));
+
+        // 이메일 중복 확인
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new GeneralException(GeneralErrorCode.DUPLICATE_EMAIL);
+        }
+
+        // 인증 코드 검증
+        emailService.verifyCode(request.getEmail(), request.getCode());
+
+        // 이메일 변경
+        user.updateEmail(request.getEmail());
+
+        // 인증 정보 삭제
+        try {
+            emailService.deleteVerified(request.getEmail());
+        } catch (Exception e) {
+            log.warn("이메일 인증 정보 삭제 실패: {}", e.getMessage());
+        }
+
+        return UserResponseDTO.UserProfileResponseDTO.builder()
+                .id(user.getId())
+                .nickName(user.getNickName())
+                .email(user.getEmail())
+                .phoneNumber(user.getPhoneNumber())
+                .phoneNumberVerified(user.isPhoneNumberVerified())
+                .birthDate(user.getBirthDate())
+                .provider(user.getProvider())
+                .build();
+
     }
 
     @Override

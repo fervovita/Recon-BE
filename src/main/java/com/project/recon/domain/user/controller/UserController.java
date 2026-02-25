@@ -35,6 +35,24 @@ public class UserController {
         return ApiResponse.onSuccess("유저 닉네임 수정 성공", response);
     }
 
+    @Operation(summary = "이메일 변경 인증 코드 발송")
+    @PostMapping("/email/send")
+    public ApiResponse<Void> sendEmailCode(
+            @AuthenticationPrincipal Long userId,
+            @Valid @RequestBody UserRequestDTO.EmailSendRequestDTO request) {
+        userService.sendEmailCode(userId, request);
+        return ApiResponse.onSuccess("인증 코드가 발송되었습니다.");
+    }
+
+    @Operation(summary = "이메일 변경")
+    @PatchMapping("/email")
+    public ApiResponse<UserResponseDTO.UserProfileResponseDTO> updateEmail(
+            @AuthenticationPrincipal Long userId,
+            @Valid @RequestBody UserRequestDTO.UpdateEmailRequestDTO request) {
+        UserResponseDTO.UserProfileResponseDTO response = userService.updateEmail(userId, request);
+        return ApiResponse.onSuccess("이메일 변경 성공", response);
+    }
+
     @Operation(summary = "SMS 인증 코드 발송")
     @PostMapping("/sms/send")
     public ApiResponse<Void> sendSmsCode(@AuthenticationPrincipal Long userId) {

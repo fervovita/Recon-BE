@@ -82,6 +82,10 @@ public class User extends BaseEntity implements UserDetails {
         this.nickName = nickName;
     }
 
+    public void updateEmail(String email) {
+        this.email = email;
+    }
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
