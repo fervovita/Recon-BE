@@ -64,6 +64,10 @@ public class Product extends BaseEntity {
         if (description != null) this.description = description;
     }
 
+    public void updateStock(int stock) {
+        this.stock = stock;
+    }
+
 
     public void addImage(ProductImage image) {
         this.images.add(image);

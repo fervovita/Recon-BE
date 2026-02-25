@@ -2,11 +2,14 @@ package com.project.recon.domain.product.service;
 
 import com.project.recon.domain.product.document.ProductDocument;
 import com.project.recon.domain.product.entity.Product;
+import com.project.recon.domain.product.repository.ProductRepository;
 import com.project.recon.domain.product.repository.ProductSearchRepository;
 import com.project.recon.global.apiPayload.code.GeneralErrorCode;
 import com.project.recon.global.apiPayload.exception.GeneralException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHit;
@@ -24,9 +27,10 @@ import java.util.List;
 public class ProductSearchServiceImpl implements ProductSearchService {
 
     private static final int MAX_SEARCH_RESULTS = 100;
+    private static final int CHUNK_SIZE = 1000;
     private final ElasticsearchOperations elasticsearchOperations;
-
     private final ProductSearchRepository productSearchRepository;
+    private final ProductRepository productRepository;
 
     // 상품 검색 : keyword로 ES에서 매칭되는 상품 ID만 반환
     @Override
@@ -113,4 +117,48 @@ public class ProductSearchServiceImpl implements ProductSearchService {
     public void recoverDelete(Exception e, Long productId) {
         log.error("Elasticsearch 삭제 실패 (productId={}): {}", productId, e.getMessage());
     }
+
+    @Override
+    public void syncIndexFromDB() {
+        int page = 0;
+        int totalIndexed = 0;
+
+        log.info("[Search] Elasticsearch 전체 동기화 시작");
+
+        // 기존 인덱스 전체 삭제
+        productSearchRepository.deleteAll();
+
+        while (true) {
+            Page<Product> productPage = productRepository.findAll(PageRequest.of(page, CHUNK_SIZE));
+
+            // 데이터가 0건인 경우
+            if (productPage.isEmpty()) {
+                break;
+            }
+
+            // DB Entity -> ES Document 변환
+            List<ProductDocument> documents = productPage.getContent().stream()
+                    .map(ProductDocument::from)
+                    .toList();
+
+            // ES에 insert
+            try {
+                productSearchRepository.saveAll(documents);
+                totalIndexed += documents.size();
+            } catch (Exception e) {
+                log.error("[Search] 동기화 중 에러 발생 (Page: {}): {}", page, e.getMessage());
+            }
+
+            // 마지막
+            if (productPage.isLast()) {
+                break;
+            }
+
+            page++;
+        }
+
+        log.info("[Search] Elasticsearch 전체 동기화 완료 (총 {}건)", totalIndexed);
+
+    }
 }
+

@@ -13,4 +13,6 @@ public interface ProductSearchService {
     void indexProduct(Product product);
 
     void deleteProduct(Long productId);
+
+    void syncIndexFromDB();
 }

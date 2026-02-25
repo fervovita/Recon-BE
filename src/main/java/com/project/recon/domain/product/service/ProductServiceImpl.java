@@ -11,6 +11,7 @@ import com.project.recon.domain.user.repository.UserRepository;
 import com.project.recon.global.apiPayload.code.GeneralErrorCode;
 import com.project.recon.global.apiPayload.exception.GeneralException;
 import com.project.recon.global.s3.S3Service;
+import com.project.recon.global.stock.StockService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -32,6 +33,7 @@ public class ProductServiceImpl implements ProductService {
 
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
+    private final StockService stockService;
     private final S3Service s3Service;
     private final ProductLikeRepository productLikeRepository;
     private final ProductSearchService productSearchService;
@@ -151,6 +153,9 @@ public class ProductServiceImpl implements ProductService {
         // 상품 저장
         productRepository.save(product);
 
+        // Redis 재고 저장
+        stockService.setStock(product.getId(), request.getStock());
+
         // 상품 생성 이벤트 발행
         eventPublisher.publishEvent(new ProductEvent(product.getId(), ProductEvent.EventType.CREATED));
 
@@ -182,6 +187,9 @@ public class ProductServiceImpl implements ProductService {
 
         // S3에서 이미지 삭제
         imageUrls.forEach(s3Service::delete);
+
+        // Redis 재고 삭제
+        stockService.deleteStock(productId);
 
         // 상품 삭제 이벤트 발행
         eventPublisher.publishEvent(new ProductEvent(product.getId(), ProductEvent.EventType.DELETED));
