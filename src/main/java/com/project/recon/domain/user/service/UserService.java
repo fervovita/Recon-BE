@@ -13,7 +13,7 @@ public interface UserService {
 
     UserResponseDTO.UserProfileResponseDTO updateEmail(Long userId, UserRequestDTO.UpdateEmailRequestDTO request);
 
-    void sendSmsCode(Long userId);
+    void sendPhoneCode(Long userId, UserRequestDTO.PhoneSendRequestDTO request);
 
-    void verifySmsCode(Long userId, UserRequestDTO.SmsVerifyRequestDTO request);
+    UserResponseDTO.UserProfileResponseDTO updatePhoneNumber(Long userId, UserRequestDTO.UpdatePhoneRequestDTO request);
 }

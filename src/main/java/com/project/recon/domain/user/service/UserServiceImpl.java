@@ -119,45 +119,71 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void sendSmsCode(Long userId) {
+    public void sendPhoneCode(Long userId, UserRequestDTO.PhoneSendRequestDTO request) {
 
         // 유저 조회
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new GeneralException(GeneralErrorCode.MEMBER_NOT_FOUND));
 
-        // SMS 인증 여부 확인
-        if (user.isPhoneNumberVerified()) {
+        // 같은 번호인데 이미 인증된 경우
+        if (request.getPhoneNumber().equals(user.getPhoneNumber())
+                && user.isPhoneNumberVerified()) {
             throw new GeneralException(GeneralErrorCode.SMS_ALREADY_VERIFIED);
         }
 
-        // 인증 코드 전송
-        smsService.sendVerificationCode(user.getPhoneNumber());
+        // 다른 번호로 변경하는 경우에만 중복 확인
+        if (!request.getPhoneNumber().equals(user.getPhoneNumber())
+                && userRepository.existsByPhoneNumber(request.getPhoneNumber())) {
+            throw new GeneralException(GeneralErrorCode.DUPLICATE_PHONE);
+        }
+
+        // 인증 코드 발송
+        smsService.sendVerificationCode(request.getPhoneNumber());
     }
 
     @Override
     @Transactional
-    public void verifySmsCode(Long userId, UserRequestDTO.SmsVerifyRequestDTO request) {
+    public UserResponseDTO.UserProfileResponseDTO updatePhoneNumber(Long userId, UserRequestDTO.UpdatePhoneRequestDTO request) {
 
         // 유저 조회
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new GeneralException(GeneralErrorCode.MEMBER_NOT_FOUND));
 
-        // SMS 인증 여부 확인
-        if (user.isPhoneNumberVerified()) {
+
+        // 같은 번호인데 이미 인증된 경우
+        if (request.getPhoneNumber().equals(user.getPhoneNumber())
+                && user.isPhoneNumberVerified()) {
             throw new GeneralException(GeneralErrorCode.SMS_ALREADY_VERIFIED);
         }
 
-        // 인증 코드 검증
-        smsService.verifyCode(user.getPhoneNumber(), request.getCode());
+        // 다른 번호로 변경하는 경우에만 중복 확인
+        if (!request.getPhoneNumber().equals(user.getPhoneNumber())
+                && userRepository.existsByPhoneNumber(request.getPhoneNumber())) {
+            throw new GeneralException(GeneralErrorCode.DUPLICATE_PHONE);
+        }
 
-        // 유저 필드값 변경
-        user.verifyPhoneNumber();
+        // 인증 코드 검증
+        smsService.verifyCode(request.getPhoneNumber(), request.getCode());
+
+        // 전화번호 변경 & verified
+        user.updatePhoneNumber(request.getPhoneNumber());
 
         // 인증 코드 삭제
         try {
-            smsService.deleteVerified(user.getPhoneNumber());
+            smsService.deleteVerified(request.getPhoneNumber());
         } catch (Exception e) {
             log.warn("SMS 인증 정보 삭제 실패: {}", e.getMessage());
         }
+
+        return UserResponseDTO.UserProfileResponseDTO.builder()
+                .id(user.getId())
+                .nickName(user.getNickName())
+                .email(user.getEmail())
+                .phoneNumber(user.getPhoneNumber())
+                .phoneNumberVerified(user.isPhoneNumberVerified())
+                .birthDate(user.getBirthDate())
+                .provider(user.getProvider())
+                .build();
+
     }
 }
