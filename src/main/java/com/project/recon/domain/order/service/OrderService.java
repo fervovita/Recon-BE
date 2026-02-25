@@ -10,4 +10,6 @@ public interface OrderService {
     OrderResponseDTO.OrderDetailResponseDTO createDirectOrder(Long userId, OrderRequestDTO.DirectOrderRequestDTO request);
 
     OrderResponseDTO.OrderDetailResponseDTO payOrder(Long userId, Long orderId);
+
+    void cancelOrder(Long userId, Long orderId);
 }

@@ -46,4 +46,13 @@ public class OrderController {
         return ApiResponse.onSuccess("결제 성공", response);
     }
 
+    @Operation(summary = "주문 취소")
+    @PostMapping("/{orderId}/cancel")
+    public ApiResponse<Void> cancelOrder(
+            @AuthenticationPrincipal Long userId,
+            @PathVariable Long orderId) {
+        orderService.cancelOrder(userId, orderId);
+        return ApiResponse.onSuccess("주문 취소 성공");
+    }
+
 }

@@ -154,13 +154,46 @@ public class OrderServiceImpl implements OrderService {
 
         // DB 재고 동기화
         for (OrderItem item : order.getOrderItems()) {
-            productRepository.decreaseStock(item.getProduct().getId(), item.getQuantity());
+            int updatedCount = productRepository.decreaseStock(item.getProduct().getId(), item.getQuantity());
+            if (updatedCount == 0) {
+                throw new GeneralException(GeneralErrorCode.OUT_OF_STOCK);
+            }
         }
 
         // 주문 확정
         order.confirm();
 
         return toOrderDetailResponse(order);
+    }
+
+    @Override
+    @Transactional
+    public void cancelOrder(Long userId, Long orderId) {
+
+        // 주문 조회
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new GeneralException(GeneralErrorCode.ORDER_NOT_FOUND));
+
+        // 본인 주문 여부 확인
+        if (!order.getUser().getId().equals(userId)) {
+            throw new GeneralException(GeneralErrorCode.ORDER_NOT_BUYER);
+        }
+
+        // 이미 취소된 주문인지 확인
+        if (order.getStatus() == OrderStatus.CANCELLED) {
+            throw new GeneralException(GeneralErrorCode.ORDER_ALREADY_CANCELLED);
+        }
+
+        // 결제가 완료된 주문이면 재고 복구
+        if (order.getStatus() == OrderStatus.CONFIRMED) {
+            for (OrderItem item : order.getOrderItems()) {
+                stockService.increaseStock(item.getProduct().getId(), item.getQuantity());
+                productRepository.increaseStock(item.getProduct().getId(), item.getQuantity());
+            }
+        }
+
+        // 주문 취소
+        order.cancel();
     }
 
     private OrderResponseDTO.OrderDetailResponseDTO toOrderDetailResponse(Order order) {

@@ -70,6 +70,7 @@ public enum GeneralErrorCode implements BaseErrorCode {
     ORDER_NOT_FOUND(HttpStatus.NOT_FOUND, "ORD_4041", "존재하지 않는 주문입니다."),
     ORDER_CANNOT_CANCEL(HttpStatus.BAD_REQUEST, "ORD_4001", "배송이 시작되어 취소가 불가능합니다."),
     ORDER_ALREADY_COMPLETED(HttpStatus.BAD_REQUEST, "ORD_4002", "이미 완료된 주문입니다."),
+    ORDER_ALREADY_CANCELLED(HttpStatus.BAD_REQUEST, "ORD_4003", "이미 취소된 주문입니다."),
     ORDER_SELLER_NOT_ALLOWED(HttpStatus.FORBIDDEN, "ORD_4031", "본인 상품은 주문할 수 없습니다."),
     ORDER_NOT_BUYER(HttpStatus.FORBIDDEN, "ORD_4032", "본인이 주문한 상품이 아닙니다."),
 
