@@ -30,15 +30,7 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new GeneralException(GeneralErrorCode.MEMBER_NOT_FOUND));
 
 
-        return UserResponseDTO.UserProfileResponseDTO.builder()
-                .id(user.getId())
-                .nickName(user.getNickName())
-                .email(user.getEmail())
-                .phoneNumber(user.getPhoneNumber())
-                .phoneNumberVerified(user.isPhoneNumberVerified())
-                .birthDate(user.getBirthDate())
-                .provider(user.getProvider())
-                .build();
+        return toUserProfileResponse(user);
     }
 
     @Override
@@ -52,15 +44,7 @@ public class UserServiceImpl implements UserService {
         // 닉네임 수정
         user.updateNickName(request.getNickName());
 
-        return UserResponseDTO.UserProfileResponseDTO.builder()
-                .id(user.getId())
-                .nickName(user.getNickName())
-                .email(user.getEmail())
-                .phoneNumber(user.getPhoneNumber())
-                .phoneNumberVerified(user.isPhoneNumberVerified())
-                .birthDate(user.getBirthDate())
-                .provider(user.getProvider())
-                .build();
+        return toUserProfileResponse(user);
     }
 
     @Override
@@ -106,15 +90,7 @@ public class UserServiceImpl implements UserService {
             log.warn("이메일 인증 정보 삭제 실패: {}", e.getMessage());
         }
 
-        return UserResponseDTO.UserProfileResponseDTO.builder()
-                .id(user.getId())
-                .nickName(user.getNickName())
-                .email(user.getEmail())
-                .phoneNumber(user.getPhoneNumber())
-                .phoneNumberVerified(user.isPhoneNumberVerified())
-                .birthDate(user.getBirthDate())
-                .provider(user.getProvider())
-                .build();
+        return toUserProfileResponse(user);
 
     }
 
@@ -175,6 +151,12 @@ public class UserServiceImpl implements UserService {
             log.warn("SMS 인증 정보 삭제 실패: {}", e.getMessage());
         }
 
+        return toUserProfileResponse(user);
+
+    }
+
+
+    private UserResponseDTO.UserProfileResponseDTO toUserProfileResponse(User user) {
         return UserResponseDTO.UserProfileResponseDTO.builder()
                 .id(user.getId())
                 .nickName(user.getNickName())
@@ -184,6 +166,5 @@ public class UserServiceImpl implements UserService {
                 .birthDate(user.getBirthDate())
                 .provider(user.getProvider())
                 .build();
-
     }
 }
