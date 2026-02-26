@@ -50,9 +50,7 @@ public class OrderServiceImpl implements OrderService {
                 .toList();
 
         // 선택한 장바구니 아이템 조회
-        List<CartItem> cartItems = cartItemRepository.findAllById(distinctCartItemIds).stream()
-                .filter(item -> item.getCart().getUser().getId().equals(userId))
-                .toList();
+        List<CartItem> cartItems = cartItemRepository.findAllByCartItemIdAndUserId(distinctCartItemIds, userId);
 
         if (cartItems.size() != distinctCartItemIds.size()) {
             throw new GeneralException(GeneralErrorCode.CART_ITEM_NOT_FOUND);
