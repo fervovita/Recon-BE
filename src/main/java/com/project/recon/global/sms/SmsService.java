@@ -2,13 +2,12 @@ package com.project.recon.global.sms;
 
 import com.project.recon.global.apiPayload.code.GeneralErrorCode;
 import com.project.recon.global.apiPayload.exception.GeneralException;
+import com.project.recon.global.verification.CodeStoreService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
-import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
@@ -22,33 +21,23 @@ public class SmsService {
     private static final long VERIFIED_EXPIRATION = 30;     // 인증 완료 유효시간 30분
     private static final long RESEND_LIMIT = 1;             // 코드 재발송 제한시간 1분
 
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final CodeStoreService codeStoreService;
     private final SmsSender smsSender;
 
     public void sendVerificationCode(String phoneNumber) {
         String resendKey = RESEND_PREFIX + phoneNumber;
 
-        if (Boolean.TRUE.equals(redisTemplate.hasKey(resendKey))) {
+        if (codeStoreService.hasKey(resendKey)) {
             throw new GeneralException(GeneralErrorCode.SMS_CODE_ALREADY_SENT);
         }
 
         String code = generateCode();
 
-        // Redis에 인증 코드 저장 (TTL: 3분)
-        redisTemplate.opsForValue().set(
-                CODE_PREFIX + phoneNumber,
-                code,
-                CODE_EXPIRATION,
-                TimeUnit.MINUTES
-        );
+        // 인증 코드 저장 (TTL: 3분)
+        codeStoreService.save(CODE_PREFIX + phoneNumber, code, CODE_EXPIRATION);
 
-        // Redis에 코드 재발송 제한 저장 (TTL: 1분)
-        redisTemplate.opsForValue().set(
-                resendKey,
-                "true",
-                RESEND_LIMIT,
-                TimeUnit.MINUTES
-        );
+        // 코드 재발송 제한 저장 (TTL: 1분)
+        codeStoreService.save(resendKey, "true", RESEND_LIMIT);
 
         // SMS 발송(비동기)
         smsSender.sendVerificationSms(phoneNumber, code);
@@ -56,34 +45,29 @@ public class SmsService {
 
     public void verifyCode(String phoneNumber, String code) {
         String key = CODE_PREFIX + phoneNumber;
-        Object savedCode = redisTemplate.opsForValue().get(key);
+        String savedCode = codeStoreService.get(key);
 
         if (savedCode == null) {
             throw new GeneralException(GeneralErrorCode.SMS_CODE_EXPIRED);
         }
 
-        if (!savedCode.toString().equals(code)) {
+        if (!savedCode.equals(code)) {
             throw new GeneralException(GeneralErrorCode.SMS_CODE_INVALID);
         }
 
-        redisTemplate.delete(key);
+        codeStoreService.delete(key);
 
-        // Redis에 인증된 전화번호 저장 (TTL: 30분)
-        redisTemplate.opsForValue().set(
-                VERIFIED_PREFIX + phoneNumber,
-                "true",
-                VERIFIED_EXPIRATION,
-                TimeUnit.MINUTES
-        );
+        //  인증된 전화번호 저장 (TTL: 30분)
+        codeStoreService.save(VERIFIED_PREFIX + phoneNumber, "true", VERIFIED_EXPIRATION);
     }
 
     public boolean isVerified(String phoneNumber) {
-        Object verified = redisTemplate.opsForValue().get(VERIFIED_PREFIX + phoneNumber);
+        String verified = codeStoreService.get(VERIFIED_PREFIX + phoneNumber);
         return "true".equals(verified);
     }
 
     public void deleteVerified(String phoneNumber) {
-        redisTemplate.delete(VERIFIED_PREFIX + phoneNumber);
+        codeStoreService.delete(VERIFIED_PREFIX + phoneNumber);
     }
 
 

@@ -25,6 +25,7 @@ spring:
     redis:
       host: ${SPRING_DATA_REDIS_HOST}
       port: ${SPRING_DATA_REDIS_PORT}
+      timeout: 3s
 
     web:
       pageable:
@@ -81,3 +82,16 @@ coolsms:
   api-key: ${COOLSMS_API_KEY}
   api-secret: ${COOLSMS_API_SECRET}
   sender-number: ${COOLSMS_SENDER_NUMBER}
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      redis:
+        sliding-window-size: 10   #최근 10개 호출로 판단
+        minimum-number-of-calls: 10   # 집계에 필요한 최소 호출 수
+        failure-rate-threshold: 10   #실패 10% 이상시 오픈
+        slow-call-rate-threshold: 10   # slowCallDurationThreshold 초과 비율이 10% 이상 시 서킷 오픈
+        slow-call-duration-threshold: 500ms   # 500ms 이상 소요 시 실패로 간주
+        wait-duration-in-open-state: 30s   # OPEN -> HALF-OPEN 전환 전 기다리는 시간
+        permitted-number-of-calls-in-half-open-state: 5   # HALF-OPEN -> CLOSE or OPEN 으로 판단하기 위해 호출 횟수
+

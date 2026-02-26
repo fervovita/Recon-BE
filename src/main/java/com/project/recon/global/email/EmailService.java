@@ -2,13 +2,12 @@ package com.project.recon.global.email;
 
 import com.project.recon.global.apiPayload.code.GeneralErrorCode;
 import com.project.recon.global.apiPayload.exception.GeneralException;
+import com.project.recon.global.verification.CodeStoreService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
-import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
@@ -23,33 +22,23 @@ public class EmailService {
     private static final long RESEND_LIMIT = 1;             // 코드 재발송 제한시간 1분
 
 
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final CodeStoreService codeStoreService;
     private final EmailSender emailSender;
 
     public void sendVerificationCode(String email) {
         String resendKey = RESEND_PREFIX + email;
 
-        if (Boolean.TRUE.equals(redisTemplate.hasKey(resendKey))) {
+        if (codeStoreService.hasKey(resendKey)) {
             throw new GeneralException(GeneralErrorCode.EMAIL_CODE_ALREADY_SENT);
         }
 
         String code = generateCode();
 
-        // Redis에 인증 코드 저장 (TTL: 5분)
-        redisTemplate.opsForValue().set(
-                CODE_PREFIX + email,
-                code,
-                CODE_EXPIRATION,
-                TimeUnit.MINUTES
-        );
+        // 인증 코드 저장 (TTL: 5분)
+        codeStoreService.save(CODE_PREFIX + email, code, CODE_EXPIRATION);
 
-        // Redis에 코드 재발송 제한 저장 (TTL: 1분)
-        redisTemplate.opsForValue().set(
-                resendKey,
-                "true",
-                RESEND_LIMIT,
-                TimeUnit.MINUTES
-        );
+        // 코드 재발송 제한 저장 (TTL: 1분)
+        codeStoreService.save(resendKey, "true", RESEND_LIMIT);
 
         // 이메일 발송(비동기)
         emailSender.sendVerificationEmail(email, code);
@@ -57,34 +46,29 @@ public class EmailService {
 
     public void verifyCode(String email, String code) {
         String key = CODE_PREFIX + email;
-        Object savedCode = redisTemplate.opsForValue().get(key);
+        String savedCode = codeStoreService.get(key);
 
         if (savedCode == null) {
             throw new GeneralException(GeneralErrorCode.EMAIL_CODE_EXPIRED);
         }
 
-        if (!savedCode.toString().equals(code)) {
+        if (!savedCode.equals(code)) {
             throw new GeneralException(GeneralErrorCode.EMAIL_CODE_INVALID);
         }
 
-        redisTemplate.delete(key);
+        codeStoreService.delete(key);
 
-        // Redis에 인증된 이메일 저장 (TTL: 30분)
-        redisTemplate.opsForValue().set(
-                VERIFIED_PREFIX + email,
-                "true",
-                VERIFIED_EXPIRATION,
-                TimeUnit.MINUTES
-        );
+        // 인증된 이메일 저장 (TTL: 30분)
+        codeStoreService.save(VERIFIED_PREFIX + email, "true", VERIFIED_EXPIRATION);
     }
 
     public boolean isVerified(String email) {
-        Object verified = redisTemplate.opsForValue().get(VERIFIED_PREFIX + email);
+        String verified = codeStoreService.get(VERIFIED_PREFIX + email);
         return "true".equals(verified);
     }
 
     public void deleteVerified(String email) {
-        redisTemplate.delete(VERIFIED_PREFIX + email);
+        codeStoreService.delete(VERIFIED_PREFIX + email);
     }
 
 
