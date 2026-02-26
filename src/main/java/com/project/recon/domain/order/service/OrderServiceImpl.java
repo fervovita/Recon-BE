@@ -151,7 +151,7 @@ public class OrderServiceImpl implements OrderService {
                     throw new GeneralException(GeneralErrorCode.OUT_OF_STOCK);
                 }
             }
-        } catch (GeneralException e) {
+        } catch (Exception e) {
             // Redis 재고 롤백
             for (OrderItem item : decreasedItems) {
                 stockService.increaseStock(item.getProduct().getId(), item.getQuantity());
