@@ -11,6 +11,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/orders")
@@ -55,4 +57,20 @@ public class OrderController {
         return ApiResponse.onSuccess("주문 취소 성공");
     }
 
+    @Operation(summary = "주문 목록 조회")
+    @GetMapping
+    public ApiResponse<List<OrderResponseDTO.OrderDetailResponseDTO>> getOrders(
+            @AuthenticationPrincipal Long userId) {
+        List<OrderResponseDTO.OrderDetailResponseDTO> response = orderService.getOrders(userId);
+        return ApiResponse.onSuccess("주문 목록 조회 성공", response);
+    }
+
+    @Operation(summary = "주문 상세 조회")
+    @GetMapping("/{orderId}")
+    public ApiResponse<OrderResponseDTO.OrderDetailResponseDTO> getOrder(
+            @AuthenticationPrincipal Long userId,
+            @PathVariable Long orderId) {
+        OrderResponseDTO.OrderDetailResponseDTO response = orderService.getOrder(userId, orderId);
+        return ApiResponse.onSuccess("주문 상세 조회 성공", response);
+    }
 }

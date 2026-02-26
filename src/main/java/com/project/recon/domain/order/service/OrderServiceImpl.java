@@ -196,6 +196,32 @@ public class OrderServiceImpl implements OrderService {
         order.cancel();
     }
 
+    @Override
+    public List<OrderResponseDTO.OrderDetailResponseDTO> getOrders(Long userId) {
+
+        // 주문 내약 조회
+        List<Order> orders = orderRepository.findByUserIdWithItems(userId);
+
+        return orders.stream()
+                .map(this::toOrderDetailResponse)
+                .toList();
+    }
+
+    @Override
+    public OrderResponseDTO.OrderDetailResponseDTO getOrder(Long userId, Long orderId) {
+
+        // 주문 조회
+        Order order = orderRepository.findByOrderIdWithItems(orderId)
+                .orElseThrow(() -> new GeneralException(GeneralErrorCode.ORDER_NOT_FOUND));
+
+        // 본인 주문 여부 확인
+        if (!order.getUser().getId().equals(userId)) {
+            throw new GeneralException(GeneralErrorCode.ORDER_NOT_BUYER);
+        }
+
+        return toOrderDetailResponse(order);
+    }
+
     private OrderResponseDTO.OrderDetailResponseDTO toOrderDetailResponse(Order order) {
         List<OrderResponseDTO.OrderItemDTO> items = order.getOrderItems().stream()
                 .map(item -> OrderResponseDTO.OrderItemDTO.builder()
