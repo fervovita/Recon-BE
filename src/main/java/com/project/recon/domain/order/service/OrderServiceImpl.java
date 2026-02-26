@@ -136,28 +136,29 @@ public class OrderServiceImpl implements OrderService {
             throw new GeneralException(GeneralErrorCode.ORDER_ALREADY_COMPLETED);
         }
 
-        // Redis 재고 차감
+        // 재고 차감
         List<OrderItem> decreasedItems = new ArrayList<>();
 
         try {
+            // Redis 재고 차감
             for (OrderItem item : order.getOrderItems()) {
                 stockService.decreaseStock(item.getProduct().getId(), item.getQuantity());
                 decreasedItems.add(item);
             }
+
+            // DB 재고 동기화
+            for (OrderItem item : order.getOrderItems()) {
+                int updatedCount = productRepository.decreaseStock(item.getProduct().getId(), item.getQuantity());
+                if (updatedCount == 0) {
+                    throw new GeneralException(GeneralErrorCode.OUT_OF_STOCK);
+                }
+            }
         } catch (GeneralException e) {
-            // 이미 차감한 재고 롤백
+            // Redis 재고 롤백
             for (OrderItem item : decreasedItems) {
                 stockService.increaseStock(item.getProduct().getId(), item.getQuantity());
             }
             throw e;
-        }
-
-        // DB 재고 동기화
-        for (OrderItem item : order.getOrderItems()) {
-            int updatedCount = productRepository.decreaseStock(item.getProduct().getId(), item.getQuantity());
-            if (updatedCount == 0) {
-                throw new GeneralException(GeneralErrorCode.OUT_OF_STOCK);
-            }
         }
 
         // 주문 확정
@@ -199,7 +200,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public List<OrderResponseDTO.OrderDetailResponseDTO> getOrders(Long userId) {
 
-        // 주문 내약 조회
+        // 주문 내역 조회
         List<Order> orders = orderRepository.findByUserIdWithItems(userId);
 
         return orders.stream()
