@@ -61,6 +61,11 @@ public class OrderServiceImpl implements OrderService {
         for (CartItem cartItem : cartItems) {
             Product product = cartItem.getProduct();
 
+            // 본인 상품인지 확인
+            if (product.getSeller().getId().equals(user.getId())) {
+                throw new GeneralException(GeneralErrorCode.ORDER_SELLER_NOT_ALLOWED);
+            }
+
             if (cartItem.getQuantity() > product.getStock()) {
                 throw new GeneralException(GeneralErrorCode.OUT_OF_STOCK);
             }
