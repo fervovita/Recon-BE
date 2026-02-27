@@ -12,7 +12,6 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class ProductSyncScheduler {
 
-    private static final int CHUNK_SIZE = 1000;
     private final ProductSearchService productSearchService;
     private final StockService stockService;
 

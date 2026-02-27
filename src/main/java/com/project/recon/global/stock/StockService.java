@@ -6,7 +6,6 @@ import com.project.recon.global.apiPayload.code.GeneralErrorCode;
 import com.project.recon.global.apiPayload.exception.GeneralException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -14,7 +13,6 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class StockService {
 
@@ -32,10 +30,6 @@ public class StockService {
         this.redisTemplate = redisTemplate;
         this.productRepository = productRepository;
         this.circuitBreaker = circuitBreakerRegistry.circuitBreaker("redis");
-
-        this.circuitBreaker.getEventPublisher()
-                .onStateTransition(event ->
-                        log.info("[CircuitBreaker] 상태 변경: {}", event.getStateTransition()));
     }
 
     public void setStock(Long productId, int stock) {
