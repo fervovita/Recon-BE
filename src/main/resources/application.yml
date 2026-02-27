@@ -94,4 +94,6 @@ resilience4j:
         slow-call-duration-threshold: 500ms   # 500ms 이상 소요 시 실패로 간주
         wait-duration-in-open-state: 30s   # OPEN -> HALF-OPEN 전환 전 기다리는 시간
         permitted-number-of-calls-in-half-open-state: 5   # HALF-OPEN -> CLOSE or OPEN 으로 판단하기 위해 호출 횟수
+        ignore-exceptions: # 이 예외들은 실패로 처리하지 않음
+          - com.project.recon.global.apiPayload.exception.GeneralException
 
