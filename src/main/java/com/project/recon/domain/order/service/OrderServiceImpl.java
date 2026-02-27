@@ -135,13 +135,14 @@ public class OrderServiceImpl implements OrderService {
         }
 
         // 재고 차감
-        List<OrderItem> decreasedItems = new ArrayList<>();
+        List<OrderItem> redisDecreasedItems = new ArrayList<>();
 
         try {
             // Redis 재고 차감
             for (OrderItem item : order.getOrderItems()) {
-                stockService.decreaseStock(item.getProduct().getId(), item.getQuantity());
-                decreasedItems.add(item);
+                if (stockService.decreaseStock(item.getProduct().getId(), item.getQuantity())) {
+                    redisDecreasedItems.add(item);
+                }
             }
 
             // DB 재고 동기화
@@ -153,7 +154,7 @@ public class OrderServiceImpl implements OrderService {
             }
         } catch (Exception e) {
             // Redis 재고 롤백
-            for (OrderItem item : decreasedItems) {
+            for (OrderItem item : redisDecreasedItems) {
                 stockService.increaseStock(item.getProduct().getId(), item.getQuantity());
             }
             throw e;

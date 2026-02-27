@@ -4,6 +4,8 @@ import com.project.recon.domain.product.entity.Product;
 import com.project.recon.domain.product.repository.ProductRepository;
 import com.project.recon.global.apiPayload.code.GeneralErrorCode;
 import com.project.recon.global.apiPayload.exception.GeneralException;
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -21,49 +23,65 @@ public class StockService {
 
     private final RedisTemplate<String, Object> redisTemplate;
     private final ProductRepository productRepository;
+    private final CircuitBreaker circuitBreaker;
+
+    public StockService(
+            RedisTemplate<String, Object> redisTemplate,
+            ProductRepository productRepository,
+            CircuitBreakerRegistry circuitBreakerRegistry) {
+        this.redisTemplate = redisTemplate;
+        this.productRepository = productRepository;
+        this.circuitBreaker = circuitBreakerRegistry.circuitBreaker("redis");
+
+        this.circuitBreaker.getEventPublisher()
+                .onStateTransition(event ->
+                        log.info("[CircuitBreaker] 상태 변경: {}", event.getStateTransition()));
+    }
 
     public void setStock(Long productId, int stock) {
-        redisTemplate.opsForValue().set(STOCK_PREFIX + productId, String.valueOf(stock));
+        try {
+            circuitBreaker.executeRunnable(() -> redisTemplate.opsForValue().set(STOCK_PREFIX + productId, String.valueOf(stock)));
+        } catch (Exception e) {
+            log.warn("[StockService] Redis 재고 설정 건너뜀: productId={}", productId, e);
+        }
+
     }
 
-    public int getStock(Long productId) {
-        Object value = redisTemplate.opsForValue().get(STOCK_PREFIX + productId);
-        if (value == null) {
-            throw new GeneralException(GeneralErrorCode.PRODUCT_NOT_FOUND);
-        }
+    public boolean decreaseStock(Long productId, int quantity) {
+        try {
+            circuitBreaker.executeRunnable(() -> {
+                String key = STOCK_PREFIX + productId;
+                Long result = redisTemplate.opsForValue().decrement(key, quantity);
 
-        return Integer.parseInt(value.toString());
+                if (result != null && result < 0) {
+                    redisTemplate.opsForValue().increment(key, quantity);
+                    throw new GeneralException(GeneralErrorCode.OUT_OF_STOCK);
+                }
+            });
+
+            return true;
+        } catch (GeneralException e) {
+            throw e;
+        } catch (Exception e) {
+            log.warn("[StockService] Redis 재고 차감 건너뜀: productId={}", productId, e);
+            return false;
+        }
     }
 
-    public long decreaseStock(Long productId, int quantity) {
-        String key = STOCK_PREFIX + productId;
-        Long result = redisTemplate.opsForValue().decrement(key, quantity);
-
-        if (result == null) {
-            throw new GeneralException(GeneralErrorCode.PRODUCT_NOT_FOUND);
+    public void increaseStock(Long productId, int quantity) {
+        try {
+            circuitBreaker.executeRunnable(() -> redisTemplate.opsForValue().increment(STOCK_PREFIX + productId, quantity));
+        } catch (Exception e) {
+            log.warn("[StockService] Redis 재고 증가 건너뜀: productId={}", productId, e);
         }
-
-        // 재고가 부족하면 롤백
-        if (result < 0) {
-            redisTemplate.opsForValue().increment(key, quantity);
-            throw new GeneralException(GeneralErrorCode.OUT_OF_STOCK);
-        }
-
-        return result;
-    }
-
-    public long increaseStock(Long productId, int quantity) {
-        Long result = redisTemplate.opsForValue().increment(STOCK_PREFIX + productId, quantity);
-
-        if (result == null) {
-            throw new GeneralException(GeneralErrorCode.PRODUCT_NOT_FOUND);
-        }
-
-        return result;
     }
 
     public void deleteStock(Long productId) {
-        redisTemplate.delete(STOCK_PREFIX + productId);
+        try {
+            circuitBreaker.executeRunnable(() -> redisTemplate.delete(STOCK_PREFIX + productId));
+        } catch (Exception e) {
+            log.warn("[StockService] Redis 재고 삭제 건너뜀: productId={}", productId, e);
+        }
     }
 
     public void syncStockFromDB() {
