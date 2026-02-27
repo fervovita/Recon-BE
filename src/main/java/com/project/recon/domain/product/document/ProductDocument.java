@@ -24,7 +24,6 @@ public class ProductDocument {
     private String description;
     private CategoryType category;
     private Long price;
-    private int stock;
     @Field(type = FieldType.Date, format = DateFormat.date_hour_minute_second_millis)
     private LocalDateTime createdAt;
 
@@ -35,7 +34,6 @@ public class ProductDocument {
                 .description(product.getDescription())
                 .category(product.getCategory())
                 .price(product.getPrice())
-                .stock(product.getStock())
                 .createdAt(product.getCreatedAt())
                 .build();
     }

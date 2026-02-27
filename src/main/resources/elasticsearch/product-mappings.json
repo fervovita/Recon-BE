@@ -27,9 +27,6 @@
     "price": {
       "type": "long"
     },
-    "stock": {
-      "type": "integer"
-    },
     "createdAt": {
       "type": "date",
       "format": "yyyy-MM-dd'T'HH:mm:ss.SSS||yyyy-MM-dd'T'HH:mm:ss||epoch_millis"
