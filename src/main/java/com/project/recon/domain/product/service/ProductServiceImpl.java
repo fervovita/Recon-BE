@@ -277,6 +277,35 @@ public class ProductServiceImpl implements ProductService {
                 .build();
     }
 
+    @Override
+    public Slice<ProductResponseDTO.ProductListResponseDTO> getLikedProducts(Long userId, Pageable pageable) {
+
+        // 좋아요한 상품 조회
+        Slice<Product> products = productRepository.searchLikedProducts(userId, pageable);
+
+        List<Long> productIds = products.getContent().stream()
+                .map(Product::getId)
+                .toList();
+
+        if (productIds.isEmpty()) {
+            return products.map(product -> toListDTO(product, Map.of(), Set.of()));
+        }
+
+        // 상품별 좋아요 수 조회
+        Map<Long, Long> likeCountMap = productLikeRepository.countByProductIds(productIds).stream()
+                .collect(Collectors.toMap(
+                        row -> (Long) row[0],   // productId
+                        row -> (Long) row[1]    // likeCount
+                ));
+
+
+        // 전부 좋아요한 상품
+        Set<Long> likedProductIds = new HashSet<>(productIds);
+
+        return products.map(product -> toListDTO(product, likeCountMap, likedProductIds));
+
+    }
+
     private ProductResponseDTO.ProductListResponseDTO toListDTO(Product product, Map<Long, Long> likeCountMap, Set<Long> likedProductIds) {
 
         // thumbnail 조회 (imageOrder가 0이 thumbnail)

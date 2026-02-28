@@ -23,4 +23,6 @@ public interface ProductService {
     ProductResponseDTO.UpdateProductResponseDTO updateProduct(Long userId, Long productId, ProductRequestDTO.UpdateProductRequestDTO request, List<MultipartFile> newImages);
 
     ProductResponseDTO.ProductLikeResponseDTO toggleLike(Long userId, Long productId);
+
+    Slice<ProductResponseDTO.ProductListResponseDTO> getLikedProducts(Long userId, Pageable pageable);
 }

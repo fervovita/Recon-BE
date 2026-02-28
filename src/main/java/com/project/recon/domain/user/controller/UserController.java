@@ -1,13 +1,19 @@
 package com.project.recon.domain.user.controller;
 
+import com.project.recon.domain.product.dto.ProductResponseDTO;
+import com.project.recon.domain.product.service.ProductService;
 import com.project.recon.domain.user.dto.UserRequestDTO;
 import com.project.recon.domain.user.dto.UserResponseDTO;
 import com.project.recon.domain.user.service.UserService;
 import com.project.recon.global.apiPayload.response.ApiResponse;
+import com.project.recon.global.apiPayload.response.SliceResponseDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,12 +24,24 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
 
     private final UserService userService;
+    private final ProductService productService;
 
     @Operation(summary = "유저 정보 조회")
     @GetMapping("/profile")
     public ApiResponse<UserResponseDTO.UserProfileResponseDTO> getProfile(@AuthenticationPrincipal Long userId) {
         UserResponseDTO.UserProfileResponseDTO response = userService.getUserProfile(userId);
         return ApiResponse.onSuccess("유저 정보 조회 성공", response);
+    }
+
+    @Operation(summary = "좋아요한 상품 목록 조회")
+    @GetMapping("/liked-products")
+    public ApiResponse<SliceResponseDTO<ProductResponseDTO.ProductListResponseDTO>> getLikedProducts(
+            @AuthenticationPrincipal Long userId,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        Pageable pageable = PageRequest.of(Math.max(page - 1, 0), Math.max(size, 1));
+        Slice<ProductResponseDTO.ProductListResponseDTO> response = productService.getLikedProducts(userId, pageable);
+        return ApiResponse.onSuccess("좋아요한 상품 목록 조회 성공", SliceResponseDTO.of(response));
     }
 
     @Operation(summary = "유저 닉네임 수정")
