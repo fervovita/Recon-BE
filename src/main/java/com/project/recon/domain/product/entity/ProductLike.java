@@ -1,6 +1,7 @@
 package com.project.recon.domain.product.entity;
 
 import com.project.recon.domain.user.entity.User;
+import com.project.recon.global.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -10,7 +11,7 @@ import lombok.*;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(uniqueConstraints = @UniqueConstraint(columnNames = {"product_id", "user_id"}))
-public class ProductLike {
+public class ProductLike extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

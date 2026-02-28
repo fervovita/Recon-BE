@@ -13,4 +13,6 @@ public interface ProductRepositoryCustom {
     Slice<Product> searchProducts(String keyword, CategoryType category, ProductSortType sortBy, String sortDirection, Pageable pageable);
 
     Slice<Product> searchProductByIds(List<Long> productIds, CategoryType category, ProductSortType sortBy, String sortDirection, Pageable pageable);
+
+    Slice<Product> searchLikedProducts(Long userId, Pageable pageable);
 }

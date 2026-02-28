@@ -93,6 +93,30 @@ public class ProductRepositoryImpl implements ProductRepositoryCustom {
         return new SliceImpl<>(products, pageable, hasNext);
     }
 
+    @Override
+    public Slice<Product> searchLikedProducts(Long userId, Pageable pageable) {
+
+        QProduct product = QProduct.product;
+        QProductLike productLike = QProductLike.productLike;
+
+        List<Product> products = jpaQueryFactory
+                .selectFrom(product)
+                .innerJoin(productLike).on(productLike.product.eq(product))
+                .where(productLike.user.id.eq(userId))
+                .orderBy(productLike.createdAt.desc())
+                .offset(pageable.getOffset())   // 다음 페이지 존재 여부 확인
+                .limit(pageable.getPageSize() + 1)
+                .fetch();
+
+        boolean hasNext = products.size() > pageable.getPageSize();
+
+        if (hasNext) {
+            products.remove(products.size() - 1);   // 마지막 1개 제거
+        }
+
+        return new SliceImpl<>(products, pageable, hasNext);
+    }
+
 
     private OrderSpecifier<?> getOrderSpecifiers(ProductSortType sortBy, String sortDirection) {
         QProduct product = QProduct.product;
