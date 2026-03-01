@@ -97,3 +97,6 @@ resilience4j:
         ignore-exceptions: # 이 예외들은 실패로 처리하지 않음
           - com.project.recon.global.apiPayload.exception.GeneralException
 
+encrypt:
+  secret-key: ${ENCRYPT_SECRET_KEY}
+

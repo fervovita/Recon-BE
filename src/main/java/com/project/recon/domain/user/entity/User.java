@@ -1,6 +1,7 @@
 package com.project.recon.domain.user.entity;
 
 import com.project.recon.global.BaseEntity;
+import com.project.recon.global.encryption.EncryptConverter;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
@@ -46,7 +47,8 @@ public class User extends BaseEntity implements UserDetails {
     @Column(name = "birth_date")
     private LocalDate birthDate;
 
-    @Column(name = "phone_number", length = 20)
+    @Convert(converter = EncryptConverter.class)
+    @Column(name = "phone_number", length = 100)
     private String phoneNumber;
 
     @Column(name = "phone_verified")

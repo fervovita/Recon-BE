@@ -10,6 +10,7 @@ import com.project.recon.domain.user.repository.UserRepository;
 import com.project.recon.global.apiPayload.code.GeneralErrorCode;
 import com.project.recon.global.apiPayload.exception.GeneralException;
 import com.project.recon.global.email.EmailService;
+import com.project.recon.global.encryption.AesEncryptor;
 import com.project.recon.global.jwt.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,6 +33,7 @@ public class AuthServiceImpl implements AuthService {
     private final RefreshTokenService refreshTokenService;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
+    private final AesEncryptor aesEncryptor;
 
     @Override
     @Transactional
@@ -192,7 +194,7 @@ public class AuthServiceImpl implements AuthService {
         }
 
         // 중복 전화번호 검증
-        if (userRepository.existsByPhoneNumber(request.getPhoneNumber())) {
+        if (userRepository.existsByPhoneNumber(aesEncryptor.encrypt(request.getPhoneNumber()))) {
             throw new GeneralException(GeneralErrorCode.DUPLICATE_PHONE);
         }
 

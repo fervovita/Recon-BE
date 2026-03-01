@@ -7,6 +7,7 @@ import com.project.recon.domain.user.repository.UserRepository;
 import com.project.recon.global.apiPayload.code.GeneralErrorCode;
 import com.project.recon.global.apiPayload.exception.GeneralException;
 import com.project.recon.global.email.EmailService;
+import com.project.recon.global.encryption.AesEncryptor;
 import com.project.recon.global.sms.SmsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +23,7 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final SmsService smsService;
     private final EmailService emailService;
+    private final AesEncryptor aesEncryptor;
 
     @Override
     public UserResponseDTO.UserProfileResponseDTO getUserProfile(Long userId) {
@@ -109,7 +111,7 @@ public class UserServiceImpl implements UserService {
 
         // 다른 번호로 변경하는 경우에만 중복 확인
         if (!request.getPhoneNumber().equals(user.getPhoneNumber())
-                && userRepository.existsByPhoneNumber(request.getPhoneNumber())) {
+                && userRepository.existsByPhoneNumber(aesEncryptor.encrypt(request.getPhoneNumber()))) {
             throw new GeneralException(GeneralErrorCode.DUPLICATE_PHONE);
         }
 
@@ -134,7 +136,7 @@ public class UserServiceImpl implements UserService {
 
         // 다른 번호로 변경하는 경우에만 중복 확인
         if (!request.getPhoneNumber().equals(user.getPhoneNumber())
-                && userRepository.existsByPhoneNumber(request.getPhoneNumber())) {
+                && userRepository.existsByPhoneNumber(aesEncryptor.encrypt(request.getPhoneNumber()))) {
             throw new GeneralException(GeneralErrorCode.DUPLICATE_PHONE);
         }
 
