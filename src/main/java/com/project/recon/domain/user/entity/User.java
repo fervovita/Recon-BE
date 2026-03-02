@@ -1,6 +1,7 @@
 package com.project.recon.domain.user.entity;
 
 import com.project.recon.global.BaseEntity;
+import com.project.recon.global.encryption.EncryptConverter;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
@@ -46,8 +47,12 @@ public class User extends BaseEntity implements UserDetails {
     @Column(name = "birth_date")
     private LocalDate birthDate;
 
-    @Column(name = "phone_number", length = 20)
+    @Convert(converter = EncryptConverter.class)
+    @Column(name = "phone_number", length = 100)
     private String phoneNumber;
+
+    @Column(name = "phone_number_hash", length = 64)
+    private String phoneNumberHash;
 
     @Column(name = "phone_verified")
     private boolean phoneNumberVerified;
@@ -61,12 +66,13 @@ public class User extends BaseEntity implements UserDetails {
                 .build();
     }
 
-    public static User createEmailUser(String nickName, String email, String password, String phoneNumber, LocalDate birthDate) {
+    public static User createEmailUser(String nickName, String email, String password, String phoneNumber, String phoneNumberHash, LocalDate birthDate) {
         return User.builder()
                 .nickName(nickName)
                 .email(email)
                 .password(password)
                 .phoneNumber(phoneNumber)
+                .phoneNumberHash(phoneNumberHash)
                 .phoneNumberVerified(false)
                 .birthDate(birthDate)
                 .provider(ProviderType.LOCAL)
@@ -82,8 +88,9 @@ public class User extends BaseEntity implements UserDetails {
         this.email = email;
     }
 
-    public void updatePhoneNumber(String phoneNumber) {
+    public void updatePhoneNumber(String phoneNumber, String phoneNumberHash) {
         this.phoneNumber = phoneNumber;
+        this.phoneNumberHash = phoneNumberHash;
         phoneNumberVerified = true;
     }
 

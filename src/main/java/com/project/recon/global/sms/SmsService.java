@@ -2,6 +2,7 @@ package com.project.recon.global.sms;
 
 import com.project.recon.global.apiPayload.code.GeneralErrorCode;
 import com.project.recon.global.apiPayload.exception.GeneralException;
+import com.project.recon.global.encryption.AesEncryptor;
 import com.project.recon.global.verification.CodeStoreService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,9 +24,11 @@ public class SmsService {
 
     private final CodeStoreService codeStoreService;
     private final SmsSender smsSender;
+    private final AesEncryptor aesEncryptor;
 
     public void sendVerificationCode(String phoneNumber) {
-        String resendKey = RESEND_PREFIX + phoneNumber;
+        String hashedPhone = aesEncryptor.hash(phoneNumber);
+        String resendKey = RESEND_PREFIX + hashedPhone;
 
         if (codeStoreService.hasKey(resendKey)) {
             throw new GeneralException(GeneralErrorCode.SMS_CODE_ALREADY_SENT);
@@ -34,7 +37,7 @@ public class SmsService {
         String code = generateCode();
 
         // 인증 코드 저장 (TTL: 3분)
-        codeStoreService.save(CODE_PREFIX + phoneNumber, code, CODE_EXPIRATION);
+        codeStoreService.save(CODE_PREFIX + hashedPhone, code, CODE_EXPIRATION);
 
         // 코드 재발송 제한 저장 (TTL: 1분)
         codeStoreService.save(resendKey, "true", RESEND_LIMIT);
@@ -44,7 +47,8 @@ public class SmsService {
     }
 
     public void verifyCode(String phoneNumber, String code) {
-        String key = CODE_PREFIX + phoneNumber;
+        String hashedPhone = aesEncryptor.hash(phoneNumber);
+        String key = CODE_PREFIX + hashedPhone;
         String savedCode = codeStoreService.get(key);
 
         if (savedCode == null) {
@@ -58,16 +62,16 @@ public class SmsService {
         codeStoreService.delete(key);
 
         //  인증된 전화번호 저장 (TTL: 30분)
-        codeStoreService.save(VERIFIED_PREFIX + phoneNumber, "true", VERIFIED_EXPIRATION);
+        codeStoreService.save(VERIFIED_PREFIX + hashedPhone, "true", VERIFIED_EXPIRATION);
     }
 
     public boolean isVerified(String phoneNumber) {
-        String verified = codeStoreService.get(VERIFIED_PREFIX + phoneNumber);
+        String verified = codeStoreService.get(VERIFIED_PREFIX + aesEncryptor.hash(phoneNumber));
         return "true".equals(verified);
     }
 
     public void deleteVerified(String phoneNumber) {
-        codeStoreService.delete(VERIFIED_PREFIX + phoneNumber);
+        codeStoreService.delete(VERIFIED_PREFIX + aesEncryptor.hash(phoneNumber));
     }
 
 
