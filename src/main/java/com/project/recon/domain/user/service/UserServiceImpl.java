@@ -111,7 +111,7 @@ public class UserServiceImpl implements UserService {
 
         // 다른 번호로 변경하는 경우에만 중복 확인
         if (!request.getPhoneNumber().equals(user.getPhoneNumber())
-                && userRepository.existsByPhoneNumber(aesEncryptor.encrypt(request.getPhoneNumber()))) {
+                && userRepository.existsByPhoneNumberHash(aesEncryptor.hash(request.getPhoneNumber()))) {
             throw new GeneralException(GeneralErrorCode.DUPLICATE_PHONE);
         }
 
@@ -136,7 +136,7 @@ public class UserServiceImpl implements UserService {
 
         // 다른 번호로 변경하는 경우에만 중복 확인
         if (!request.getPhoneNumber().equals(user.getPhoneNumber())
-                && userRepository.existsByPhoneNumber(aesEncryptor.encrypt(request.getPhoneNumber()))) {
+                && userRepository.existsByPhoneNumberHash(aesEncryptor.hash(request.getPhoneNumber()))) {
             throw new GeneralException(GeneralErrorCode.DUPLICATE_PHONE);
         }
 
@@ -144,7 +144,7 @@ public class UserServiceImpl implements UserService {
         smsService.verifyCode(request.getPhoneNumber(), request.getCode());
 
         // 전화번호 변경 & verified
-        user.updatePhoneNumber(request.getPhoneNumber());
+        user.updatePhoneNumber(request.getPhoneNumber(), aesEncryptor.hash(request.getPhoneNumber()));
 
         // 인증 코드 삭제
         try {

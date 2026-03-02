@@ -99,4 +99,5 @@ resilience4j:
 
 encrypt:
   secret-key: ${ENCRYPT_SECRET_KEY}
+  hash-key: ${ENCRYPT_HASH_KEY}
 

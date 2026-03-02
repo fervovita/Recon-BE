@@ -194,7 +194,7 @@ public class AuthServiceImpl implements AuthService {
         }
 
         // 중복 전화번호 검증
-        if (userRepository.existsByPhoneNumber(aesEncryptor.encrypt(request.getPhoneNumber()))) {
+        if (userRepository.existsByPhoneNumberHash(aesEncryptor.hash(request.getPhoneNumber()))) {
             throw new GeneralException(GeneralErrorCode.DUPLICATE_PHONE);
         }
 
@@ -209,6 +209,7 @@ public class AuthServiceImpl implements AuthService {
                 request.getEmail(),
                 passwordEncoder.encode(request.getPassword()),
                 request.getPhoneNumber(),
+                aesEncryptor.hash(request.getPhoneNumber()),
                 request.getBirthDate()
         );
 
