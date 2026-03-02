@@ -69,6 +69,7 @@ public class AesEncryptor {
             // Base64 인코딩
             return Base64.getEncoder().encodeToString(combined);
         } catch (Exception e) {
+            log.error("데이터 암호화 실패: {}", e.getMessage());
             throw new GeneralException(GeneralErrorCode.ENCRYPTION_FAILED);
         }
     }
@@ -96,6 +97,7 @@ public class AesEncryptor {
             // 복호화
             return new String(cipher.doFinal(encrypted), StandardCharsets.UTF_8);
         } catch (Exception e) {
+            log.error("데이터 복호화 실패: {}", e.getMessage());
             throw new GeneralException(GeneralErrorCode.DECRYPTION_FAILED);
         }
     }
@@ -117,7 +119,8 @@ public class AesEncryptor {
 
             return sb.toString();
         } catch (Exception e) {
-            throw new GeneralException(GeneralErrorCode.ENCRYPTION_FAILED);
+            log.error("데이터 해싱 실패: {}", e.getMessage());
+            throw new GeneralException(GeneralErrorCode.HASHING_FAILED);
         }
     }
 }
