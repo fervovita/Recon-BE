@@ -51,6 +51,15 @@ jobs:
           platforms: linux/amd64
           tags: ${{ secrets.DOCKER_USERNAME }}/recon:latest
 
+      - name: Build and Push Elasticsearch Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.elasticsearch
+          push: true
+          platforms: linux/amd64
+          tags: ${{ secrets.DOCKER_USERNAME }}/recon-elasticsearch:latest
+
       # EC2에 설정 파일 동기화
       - name: Sync config files to EC2
         uses: appleboy/scp-action@v0.1.7
@@ -58,7 +67,7 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key: ${{ secrets.EC2_KEY }}
-          source: "docker-compose.yml,Dockerfile.elasticsearch,nginx/"
+          source: "docker-compose.yml,nginx/"
           target: /home/ubuntu/recon
           overwrite: true
 
@@ -74,6 +83,7 @@ jobs:
 
             echo ">>> Pulling latest Docker image"
             sudo docker pull ${{ secrets.DOCKER_USERNAME }}/recon:latest
+            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/recon-elasticsearch:latest
 
             echo ">>> Restarting containers"
             sudo docker compose down
