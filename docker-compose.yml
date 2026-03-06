@@ -41,9 +41,7 @@ services:
 
 
   elasticsearch:
-    build:
-      context: .
-      dockerfile: Dockerfile.elasticsearch
+    image: ${DOCKER_USERNAME}/recon-elasticsearch:latest
     container_name: recon-elasticsearch
     restart: unless-stopped
     environment:
