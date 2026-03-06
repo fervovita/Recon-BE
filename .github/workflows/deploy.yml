@@ -49,7 +49,9 @@ jobs:
           file: ./Dockerfile
           push: true
           platforms: linux/amd64
-          tags: ${{ secrets.DOCKER_USERNAME }}/recon:latest
+          tags: |
+            ${{ secrets.DOCKER_USERNAME }}/recon:latest
+            ${{ secrets.DOCKER_USERNAME }}/recon:${{ github.sha }}
 
       - name: Build and Push Elasticsearch Docker Image
         uses: docker/build-push-action@v5
@@ -58,7 +60,9 @@ jobs:
           file: ./Dockerfile.elasticsearch
           push: true
           platforms: linux/amd64
-          tags: ${{ secrets.DOCKER_USERNAME }}/recon-elasticsearch:latest
+          tags: |
+            ${{ secrets.DOCKER_USERNAME }}/recon-elasticsearch:latest
+            ${{ secrets.DOCKER_USERNAME }}/recon-elasticsearch:${{ github.sha }}
 
       # EC2에 설정 파일 동기화
       - name: Sync config files to EC2
@@ -80,10 +84,14 @@ jobs:
           key: ${{ secrets.EC2_KEY }}
           script: |
             cd /home/ubuntu/recon
+            
+            echo ">>> Pulling Docker images"
+            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/recon:${{ github.sha }}
+            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/recon-elasticsearch:${{ github.sha }}
 
-            echo ">>> Pulling latest Docker image"
-            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/recon:latest
-            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/recon-elasticsearch:latest
+            echo ">>> Tagging as latest for docker-compose"
+            sudo docker tag ${{ secrets.DOCKER_USERNAME }}/recon:${{ github.sha }} ${{ secrets.DOCKER_USERNAME }}/recon:latest
+            sudo docker tag ${{ secrets.DOCKER_USERNAME }}/recon-elasticsearch:${{ github.sha }} ${{ secrets.DOCKER_USERNAME }}/recon-elasticsearch:latest
 
             echo ">>> Restarting containers"
             sudo docker compose down
