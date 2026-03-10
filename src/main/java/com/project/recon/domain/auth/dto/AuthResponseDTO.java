@@ -6,30 +6,12 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 public class AuthResponseDTO {
-
+    
     @Getter
     @AllArgsConstructor
     @NoArgsConstructor
     @Builder
-    public static class LoginResponseDTO {
-        private String accessToken;
-        private String refreshToken;
-    }
-
-    @Getter
-    @AllArgsConstructor
-    @NoArgsConstructor
-    @Builder
-    public static class ReissueTokenResponseDTO {
-        private String accessToken;
-        private String refreshToken;
-    }
-
-    @Getter
-    @AllArgsConstructor
-    @NoArgsConstructor
-    @Builder
-    public static class SignupResponseDTO {
+    public static class TokenResponseDTO {
         private String accessToken;
         private String refreshToken;
     }

@@ -72,6 +72,7 @@ jwt:
   secret: ${JWT_SECRET_KEY}
   access-token-expiration: ${JWT_ACCESSTOKEN_EXPIRATION}
   refresh-token-expiration: ${JWT_REFRESHTOKEN_EXPIRATION}
+  cookie-secure: ${JWT_COOKIE_SECURE}
 
 kakao:
   client-id: ${KAKAO_CLIENT_ID}
