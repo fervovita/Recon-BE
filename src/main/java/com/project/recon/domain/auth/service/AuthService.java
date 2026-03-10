@@ -5,15 +5,15 @@ import com.project.recon.domain.auth.dto.AuthResponseDTO;
 
 public interface AuthService {
 
-    AuthResponseDTO.LoginResponseDTO kakaoLogin(AuthRequestDTO.KakaoLoginRequestDTO request);
+    AuthResponseDTO.TokenResponseDTO kakaoLogin(AuthRequestDTO.KakaoLoginRequestDTO request);
 
-    AuthResponseDTO.LoginResponseDTO emailLogin(AuthRequestDTO.EmailLoginRequestDTO request);
+    AuthResponseDTO.TokenResponseDTO emailLogin(AuthRequestDTO.EmailLoginRequestDTO request);
 
-    AuthResponseDTO.ReissueTokenResponseDTO reissueToken(AuthRequestDTO.ReissueTokenRequestDTO request);
+    AuthResponseDTO.TokenResponseDTO reissueToken(String refreshToken);
 
-    void logout(AuthRequestDTO.LogoutRequestDTO request);
+    void logout(String refreshToken);
 
-    AuthResponseDTO.SignupResponseDTO signup(AuthRequestDTO.SignupRequestDTO request);
+    AuthResponseDTO.TokenResponseDTO signup(AuthRequestDTO.SignupRequestDTO request);
 
     void sendEmailCode(AuthRequestDTO.EmailSendRequestDTO request);
 

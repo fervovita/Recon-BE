@@ -37,7 +37,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     @Transactional
-    public AuthResponseDTO.LoginResponseDTO kakaoLogin(AuthRequestDTO.KakaoLoginRequestDTO request) {
+    public AuthResponseDTO.TokenResponseDTO kakaoLogin(AuthRequestDTO.KakaoLoginRequestDTO request) {
 
         // code를 이용해 카카오 accessToken 받기
         KakaoTokenResponseDTO kakaoToken;
@@ -79,14 +79,14 @@ public class AuthServiceImpl implements AuthService {
         // refreshToken을 Redis에 저장
         refreshTokenService.saveRefreshToken(user.getId(), refreshToken);
 
-        return AuthResponseDTO.LoginResponseDTO.builder()
+        return AuthResponseDTO.TokenResponseDTO.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .build();
     }
 
     @Override
-    public AuthResponseDTO.LoginResponseDTO emailLogin(AuthRequestDTO.EmailLoginRequestDTO request) {
+    public AuthResponseDTO.TokenResponseDTO emailLogin(AuthRequestDTO.EmailLoginRequestDTO request) {
 
         // email로 유저 조회
         User user = userRepository.findByEmail(request.getEmail())
@@ -109,16 +109,14 @@ public class AuthServiceImpl implements AuthService {
         // refreshToken을 Redis에 저장
         refreshTokenService.saveRefreshToken(user.getId(), refreshToken);
 
-        return AuthResponseDTO.LoginResponseDTO.builder()
+        return AuthResponseDTO.TokenResponseDTO.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .build();
     }
 
     @Override
-    public AuthResponseDTO.ReissueTokenResponseDTO reissueToken(AuthRequestDTO.ReissueTokenRequestDTO request) {
-
-        String refreshToken = request.getRefreshToken();
+    public AuthResponseDTO.TokenResponseDTO reissueToken(String refreshToken) {
 
         // refreshToken 유효성 검증
         if (!jwtTokenProvider.isRefreshToken(refreshToken) || !jwtTokenProvider.validateToken(refreshToken)) {
@@ -145,16 +143,14 @@ public class AuthServiceImpl implements AuthService {
         // Redis에 새 refreshToken 저장
         refreshTokenService.saveRefreshToken(userId, newRefreshToken);
 
-        return AuthResponseDTO.ReissueTokenResponseDTO.builder()
+        return AuthResponseDTO.TokenResponseDTO.builder()
                 .accessToken(newAccessToken)
                 .refreshToken(newRefreshToken)
                 .build();
     }
 
     @Override
-    public void logout(AuthRequestDTO.LogoutRequestDTO request) {
-
-        String refreshToken = request.getRefreshToken();
+    public void logout(String refreshToken) {
 
         // refreshToken 유효성 검증
         if (!jwtTokenProvider.isRefreshToken(refreshToken) || !jwtTokenProvider.validateToken(refreshToken)) {
@@ -176,7 +172,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     @Transactional
-    public AuthResponseDTO.SignupResponseDTO signup(AuthRequestDTO.SignupRequestDTO request) {
+    public AuthResponseDTO.TokenResponseDTO signup(AuthRequestDTO.SignupRequestDTO request) {
 
         // 만 14세 미만 검증
         if (Period.between(request.getBirthDate(), LocalDate.now()).getYears() < 14) {
@@ -226,7 +222,7 @@ public class AuthServiceImpl implements AuthService {
         // 인증 코드 삭제
         emailService.deleteVerified(request.getEmail());
 
-        return AuthResponseDTO.SignupResponseDTO.builder()
+        return AuthResponseDTO.TokenResponseDTO.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .build();
