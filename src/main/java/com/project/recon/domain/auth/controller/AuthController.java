@@ -57,9 +57,13 @@ public class AuthController {
     @Operation(summary = "로그아웃")
     @PostMapping("/logout")
     public ApiResponse<Void> logout(HttpServletRequest request, HttpServletResponse response) {
-        String refreshToken = extractRefreshToken(request);
-        authService.logout(refreshToken);
-        clearTokenCookies(response);
+        try {
+            String refreshToken = extractRefreshToken(request);
+            authService.logout(refreshToken);
+        } finally {
+            clearTokenCookies(response);
+        }
+        
         return ApiResponse.onSuccess("로그아웃 성공");
     }
 
