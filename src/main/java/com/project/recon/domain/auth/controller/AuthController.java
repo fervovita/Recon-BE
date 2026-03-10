@@ -98,7 +98,7 @@ public class AuthController {
     private String extractRefreshToken(HttpServletRequest request) {
         if (request.getCookies() != null) {
             for (Cookie cookie : request.getCookies()) {
-                if (cookie.getName().equals("refresh_token")) {
+                if (cookie.getName().equals(CookieProvider.REFRESH_TOKEN_COOKIE)) {
                     return cookie.getValue();
                 }
             }

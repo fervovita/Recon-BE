@@ -7,18 +7,18 @@ import org.springframework.stereotype.Component;
 @Component
 public class CookieProvider {
 
+    public final static String ACCESS_TOKEN_COOKIE = "access_token";
+    public final static String REFRESH_TOKEN_COOKIE = "refresh_token";
+
     @Value("${jwt.access-token-expiration}")
     private Long accessTokenExpiration;
-
     @Value("${jwt.refresh-token-expiration}")
     private Long refreshTokenExpiration;
-
     @Value("${jwt.cookie-secure:false}")
     private boolean secure;
 
-
     public ResponseCookie createAccessTokenCookie(String token) {
-        return ResponseCookie.from("access_token", token)
+        return ResponseCookie.from(ACCESS_TOKEN_COOKIE, token)
                 .httpOnly(true)
                 .secure(secure)
                 .sameSite("Lax")
@@ -28,7 +28,7 @@ public class CookieProvider {
     }
 
     public ResponseCookie createRefreshTokenCookie(String token) {
-        return ResponseCookie.from("refresh_token", token)
+        return ResponseCookie.from(REFRESH_TOKEN_COOKIE, token)
                 .httpOnly(true)
                 .secure(secure)
                 .sameSite("Strict")
@@ -38,7 +38,7 @@ public class CookieProvider {
     }
 
     public ResponseCookie deleteAccessTokenCookie() {
-        return ResponseCookie.from("access_token", "")
+        return ResponseCookie.from(ACCESS_TOKEN_COOKIE, "")
                 .httpOnly(true)
                 .secure(secure)
                 .sameSite("Lax")
@@ -48,7 +48,7 @@ public class CookieProvider {
     }
 
     public ResponseCookie deleteRefreshTokenCookie() {
-        return ResponseCookie.from("refresh_token", "")
+        return ResponseCookie.from(REFRESH_TOKEN_COOKIE, "")
                 .httpOnly(true)
                 .secure(secure)
                 .sameSite("Strict")
